@@ -1,12 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Header } from "@/components/header"
 import { SafetyBadge } from "@/components/safety-badge"
 import { Input } from "@/components/ui/input"
 import { Search } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { getScannedRepos, type ScannedRepo } from "@/lib/scanned-repos"
 
 // Mock data
 const mockRepos = [
@@ -78,8 +79,15 @@ const mockRepos = [
 
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("")
+  const [allRepos, setAllRepos] = useState<ScannedRepo[]>(mockRepos)
 
-  const filteredRepos = mockRepos.filter(
+  useEffect(() => {
+    const scannedRepos = getScannedRepos()
+    // Merge scanned repos with mock data, scanned repos first
+    setAllRepos([...scannedRepos, ...mockRepos])
+  }, [])
+
+  const filteredRepos = allRepos.filter(
     (repo) =>
       repo.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       repo.owner.toLowerCase().includes(searchQuery.toLowerCase()) ||

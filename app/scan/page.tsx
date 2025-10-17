@@ -3,12 +3,14 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Loader2, Github, CheckCircle2, Brain } from "lucide-react"
+import { addScannedRepo, generateSafetyScore } from "@/lib/scanned-repos"
 
 const SCANNING_STEPS = [
   "Cloning repository...",
@@ -23,7 +25,10 @@ const SCANNING_STEPS = [
   "Generating security report...",
 ]
 
+const COMMON_LANGUAGES = ["JavaScript", "TypeScript", "Python", "Go", "Rust", "Java", "C++"]
+
 export default function ScanPage() {
+  const router = useRouter()
   const [repoUrl, setRepoUrl] = useState("")
   const [isScanning, setIsScanning] = useState(false)
   const [scanComplete, setScanComplete] = useState(false)
@@ -50,11 +55,32 @@ export default function ScanPage() {
     setScanComplete(false)
     setCurrentStep(0)
 
+    const urlMatch = repoUrl.match(/github\.com\/([^/]+)\/([^/]+)/)
+
     // Simulate scanning
     setTimeout(() => {
       setIsScanning(false)
       setScanComplete(true)
-    }, 6000) // Increased to 6 seconds to show more steps
+
+      if (urlMatch) {
+        const [, owner, repo] = urlMatch
+        const cleanRepo = repo.replace(/\.git$/, "")
+
+        const safetyScore = generateSafetyScore(owner, cleanRepo)
+        const randomLanguage = COMMON_LANGUAGES[Math.floor(Math.random() * COMMON_LANGUAGES.length)]
+
+        addScannedRepo({
+          name: cleanRepo,
+          owner: owner,
+          language: randomLanguage,
+          safetyScore: safetyScore,
+        })
+
+        setTimeout(() => {
+          router.push(`/repo/${owner}/${cleanRepo}`)
+        }, 1500)
+      }
+    }, 6000)
   }
 
   return (
@@ -73,7 +99,7 @@ export default function ScanPage() {
           <CardHeader>
             <CardTitle>Repository URL</CardTitle>
             <CardDescription>
-              Enter the full GitHub repository URL (e.g., https://github.com/owner/repo)
+              Enter the full GitHub repository URL (e.g., https://github.com/owner/repository)
             </CardDescription>
           </CardHeader>
           <CardContent>

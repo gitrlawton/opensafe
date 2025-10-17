@@ -2,28 +2,59 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { Loader2, Github, CheckCircle2 } from "lucide-react"
+import { Loader2, Github, CheckCircle2, Brain } from "lucide-react"
+
+const SCANNING_STEPS = [
+  "Cloning repository...",
+  "Scanning package.json for dependencies...",
+  "Analyzing node_modules for suspicious packages...",
+  "Checking for hidden install scripts...",
+  "Detecting obfuscated code patterns...",
+  "Scanning for crypto mining signatures...",
+  "Analyzing network call destinations...",
+  "Checking for credential harvesting patterns...",
+  "Verifying maintainer authenticity...",
+  "Generating security report...",
+]
 
 export default function ScanPage() {
   const [repoUrl, setRepoUrl] = useState("")
   const [isScanning, setIsScanning] = useState(false)
   const [scanComplete, setScanComplete] = useState(false)
+  const [currentStep, setCurrentStep] = useState(0)
+
+  useEffect(() => {
+    if (!isScanning) return
+
+    const interval = setInterval(() => {
+      setCurrentStep((prev) => {
+        if (prev < SCANNING_STEPS.length - 1) {
+          return prev + 1
+        }
+        return prev
+      })
+    }, 600) // Change step every 600ms
+
+    return () => clearInterval(interval)
+  }, [isScanning])
 
   const handleScan = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsScanning(true)
+    setScanComplete(false)
+    setCurrentStep(0)
 
     // Simulate scanning
     setTimeout(() => {
       setIsScanning(false)
       setScanComplete(true)
-    }, 3000)
+    }, 6000) // Increased to 6 seconds to show more steps
   }
 
   return (
@@ -64,7 +95,17 @@ export default function ScanPage() {
                 </div>
               </div>
 
-              {scanComplete && (
+              {isScanning && (
+                <div className="flex items-start gap-3 p-4 rounded-lg bg-muted/50 border border-border">
+                  <Brain className="h-5 w-5 text-primary mt-0.5 flex-shrink-0 animate-pulse" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium mb-1">Scanning</p>
+                    <p className="text-sm text-muted-foreground">{SCANNING_STEPS[currentStep]}</p>
+                  </div>
+                </div>
+              )}
+
+              {scanComplete && !isScanning && (
                 <div className="flex items-center gap-2 p-4 rounded-lg bg-success/10 text-success border border-success/20">
                   <CheckCircle2 className="h-5 w-5" />
                   <p className="text-sm font-medium">Scan complete! Redirecting to results...</p>

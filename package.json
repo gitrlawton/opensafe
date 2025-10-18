@@ -6,7 +6,20 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "setup-agents": "tsx scripts/setup-agents.ts",
+    "list-regions": "tsx scripts/list-regions.ts",
+    "list-models": "tsx scripts/list-models.ts",
+    "list-projects": "tsx scripts/list-projects.ts",
+    "test-agent": "tsx scripts/test-create-agent.ts",
+    "check-permissions": "tsx scripts/check-permissions.ts",
+    "check-gradient": "tsx scripts/check-gradient-access.ts",
+    "inspect-agent": "tsx scripts/inspect-existing-agent.ts",
+    "test-gemini": "tsx scripts/test-gemini.ts",
+    "test-github": "tsx scripts/test-github.ts",
+    "list-workspaces": "tsx scripts/list-workspaces.ts",
+    "test-link": "tsx scripts/test-link-agents.ts",
+    "link-agents": "tsx scripts/link-existing-agents.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -64,8 +77,10 @@
     "@types/node": "^22",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "dotenv": "^16.4.7",
     "postcss": "^8.5",
     "tailwindcss": "^4.1.9",
+    "tsx": "^4.19.2",
     "tw-animate-css": "1.3.3",
     "typescript": "^5"
   }

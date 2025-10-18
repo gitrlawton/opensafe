@@ -24,6 +24,10 @@
 .DS_Store
 *.pem
 .internal_docs/
+.claude/
+
+# scripts
+scripts/
 
 # debug
 npm-debug.log*

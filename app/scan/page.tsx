@@ -9,8 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { Loader2, Github, CheckCircle2, Brain } from "lucide-react"
-import { addScannedRepo, generateSafetyScore } from "@/lib/scanned-repos"
+import { Loader2, Github, CheckCircle2, Brain, AlertCircle } from "lucide-react"
 
 const SCANNING_STEPS = [
   "Cloning repository...",
@@ -32,6 +31,7 @@ function ScanPage() {
   const [repoUrl, setRepoUrl] = useState("")
   const [isScanning, setIsScanning] = useState(false)
   const [scanComplete, setScanComplete] = useState(false)
+  const [scanError, setScanError] = useState<string | null>(null)
   const [currentStep, setCurrentStep] = useState(0)
 
   useEffect(() => {
@@ -53,34 +53,49 @@ function ScanPage() {
     e.preventDefault()
     setIsScanning(true)
     setScanComplete(false)
+    setScanError(null)
     setCurrentStep(0)
 
     const urlMatch = repoUrl.match(/github\.com\/([^/]+)\/([^/]+)/)
 
-    // Simulate scanning
-    setTimeout(() => {
+    if (!urlMatch) {
+      setScanError("Invalid GitHub repository URL")
+      setIsScanning(false)
+      return
+    }
+
+    const [, owner, repo] = urlMatch
+    const cleanRepo = repo.replace(/\.git$/, "")
+
+    try {
+      // Call the real Gemini scan API
+      const response = await fetch("/api/scan-gemini", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ repoUrl }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.message || "Scan failed")
+      }
+
+      const result = await response.json()
+
       setIsScanning(false)
       setScanComplete(true)
 
-      if (urlMatch) {
-        const [, owner, repo] = urlMatch
-        const cleanRepo = repo.replace(/\.git$/, "")
-
-        const safetyScore = generateSafetyScore(owner, cleanRepo)
-        const randomLanguage = COMMON_LANGUAGES[Math.floor(Math.random() * COMMON_LANGUAGES.length)]
-
-        addScannedRepo({
-          name: cleanRepo,
-          owner: owner,
-          language: randomLanguage,
-          safetyScore: safetyScore,
-        })
-
-        setTimeout(() => {
-          router.push(`/repo/${owner}/${cleanRepo}`)
-        }, 1500)
-      }
-    }, 6000)
+      // Redirect to results page after a short delay
+      setTimeout(() => {
+        router.push(`/repo/${owner}/${cleanRepo}`)
+      }, 1500)
+    } catch (error: any) {
+      console.error("Scan error:", error)
+      setScanError(error.message || "An error occurred during scanning")
+      setIsScanning(false)
+    }
   }
 
   return (
@@ -134,6 +149,13 @@ function ScanPage() {
                 <div className="flex items-center gap-2 p-4 rounded-lg bg-success/10 text-success border border-success/20">
                   <CheckCircle2 className="h-5 w-5" />
                   <p className="text-sm font-medium">Scan complete! Redirecting to results...</p>
+                </div>
+              )}
+
+              {scanError && !isScanning && (
+                <div className="flex items-center gap-2 p-4 rounded-lg bg-destructive/10 text-destructive border border-destructive/20">
+                  <AlertCircle className="h-5 w-5" />
+                  <p className="text-sm font-medium">{scanError}</p>
                 </div>
               )}
 

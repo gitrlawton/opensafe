@@ -7,6 +7,7 @@ export interface GitHubRepoMetadata {
   owner: string;
   name: string;
   defaultBranch: string;
+  language?: string;
 }
 
 export interface GitHubFile {
@@ -77,6 +78,7 @@ export class GitHubClient {
       owner: data.owner.login,
       name: data.name,
       defaultBranch: data.default_branch || "main",
+      language: data.language || "Unknown",
     };
   }
 

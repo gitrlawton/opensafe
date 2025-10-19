@@ -4,9 +4,18 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { SafetyBadge } from "@/components/safety-badge"
 import { Input } from "@/components/ui/input"
-import { Search } from "lucide-react"
+import { Search, Loader2 } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { getScannedRepos, type ScannedRepo } from "@/lib/scanned-repos"
+
+export interface ScannedRepo {
+  id: string
+  name: string
+  owner: string
+  language: string
+  safetyScore: string | number // Support both "SAFE"/"CAUTION"/"UNSAFE" and numeric scores
+  lastScanned: string
+  scannedBy?: string
+}
 
 // Mock data
 const mockRepos = [
@@ -78,12 +87,36 @@ const mockRepos = [
 
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("")
-  const [allRepos, setAllRepos] = useState<ScannedRepo[]>(mockRepos)
+  const [allRepos, setAllRepos] = useState<ScannedRepo[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const scannedRepos = getScannedRepos()
-    // Merge scanned repos with mock data, scanned repos first
-    setAllRepos([...scannedRepos, ...mockRepos])
+    const fetchRepos = async () => {
+      try {
+        setIsLoading(true)
+        const response = await fetch("/api/repos")
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch repositories")
+        }
+
+        const snowflakeRepos = await response.json()
+
+        // Merge with mock data - show Snowflake repos first, then mock data
+        setAllRepos([...snowflakeRepos, ...mockRepos])
+        setError(null)
+      } catch (err: any) {
+        console.error("Failed to fetch repos:", err)
+        setError(err.message)
+        // Fall back to just mock data if Snowflake fails
+        setAllRepos(mockRepos)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchRepos()
   }, [])
 
   const filteredRepos = allRepos.filter(
@@ -116,8 +149,15 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="border border-border rounded-lg overflow-hidden bg-card">
-          <Table>
+        {isLoading && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        )}
+
+        {!isLoading && (
+          <div className="border border-border rounded-lg overflow-hidden bg-card">
+            <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
                 <TableHead className="font-semibold">Repo Name</TableHead>
@@ -152,9 +192,10 @@ export default function HomePage() {
               ))}
             </TableBody>
           </Table>
-        </div>
+          </div>
+        )}
 
-        {filteredRepos.length === 0 && (
+        {!isLoading && filteredRepos.length === 0 && (
           <div className="text-center py-12 text-muted-foreground">No repositories found matching your search.</div>
         )}
       </main>

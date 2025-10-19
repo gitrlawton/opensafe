@@ -7,21 +7,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "setup-agents": "tsx scripts/setup-agents.ts",
-    "list-regions": "tsx scripts/list-regions.ts",
-    "list-models": "tsx scripts/list-models.ts",
-    "list-projects": "tsx scripts/list-projects.ts",
-    "test-agent": "tsx scripts/test-create-agent.ts",
-    "check-permissions": "tsx scripts/check-permissions.ts",
-    "check-gradient": "tsx scripts/check-gradient-access.ts",
-    "inspect-agent": "tsx scripts/inspect-existing-agent.ts",
     "test-gemini": "tsx scripts/test-gemini.ts",
     "test-github": "tsx scripts/test-github.ts",
-    "list-workspaces": "tsx scripts/list-workspaces.ts",
-    "test-link": "tsx scripts/test-link-agents.ts",
-    "link-agents": "tsx scripts/link-existing-agents.ts"
+    "test-scan-gemini": "tsx scripts/test-scan-gemini.ts"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.21.0",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-accordion": "1.2.2",
     "@radix-ui/react-alert-dialog": "1.1.4",

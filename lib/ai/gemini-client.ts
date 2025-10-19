@@ -1,6 +1,6 @@
 /**
  * Gemini API Client for OpenSafe
- * Used for summary generation to save on DigitalOcean credits
+ * Used for summary generation
  */
 
 export class GeminiClient {

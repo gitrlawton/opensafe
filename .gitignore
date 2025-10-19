@@ -25,6 +25,7 @@
 *.pem
 .internal_docs/
 .claude/
+scan_results/
 
 # scripts
 scripts/

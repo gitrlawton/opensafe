@@ -1,7 +1,6 @@
 "use client"
 
 import Link from "next/link"
-import { Header } from "@/components/header"
 import { SafetyBadge } from "@/components/safety-badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"

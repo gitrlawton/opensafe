@@ -12,6 +12,7 @@
     "test-scan-gemini": "tsx scripts/test-scan-gemini.ts"
   },
   "dependencies": {
+    "@auth0/nextjs-auth0": "^4.11.0",
     "@google/generative-ai": "^0.21.0",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-accordion": "1.2.2",
@@ -22,7 +23,7 @@
     "@radix-ui/react-collapsible": "1.1.2",
     "@radix-ui/react-context-menu": "2.2.4",
     "@radix-ui/react-dialog": "1.1.4",
-    "@radix-ui/react-dropdown-menu": "2.1.4",
+    "@radix-ui/react-dropdown-menu": "^2.1.4",
     "@radix-ui/react-hover-card": "1.1.4",
     "@radix-ui/react-label": "2.1.1",
     "@radix-ui/react-menubar": "1.1.4",
@@ -58,6 +59,7 @@
     "react-hook-form": "^7.60.0",
     "react-resizable-panels": "^2.1.7",
     "recharts": "2.15.4",
+    "server-only": "^0.0.1",
     "sonner": "^1.7.4",
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7",

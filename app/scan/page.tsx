@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Header } from "@/components/header"
+import { withPageAuthRequired } from "@auth0/nextjs-auth0/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -27,7 +27,7 @@ const SCANNING_STEPS = [
 
 const COMMON_LANGUAGES = ["JavaScript", "TypeScript", "Python", "Go", "Rust", "Java", "C++"]
 
-export default function ScanPage() {
+function ScanPage() {
   const router = useRouter()
   const [repoUrl, setRepoUrl] = useState("")
   const [isScanning, setIsScanning] = useState(false)
@@ -85,7 +85,6 @@ export default function ScanPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
 
       <main className="container mx-auto px-4 py-12 max-w-2xl">
         <div className="mb-8">
@@ -185,3 +184,5 @@ export default function ScanPage() {
     </div>
   )
 }
+
+export default withPageAuthRequired(ScanPage);

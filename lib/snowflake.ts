@@ -68,16 +68,34 @@ export async function insertScannedRepo(data: {
   findings: any;
   scannedBy: string;
 }): Promise<void> {
-  // Use SELECT instead of VALUES to allow PARSE_JSON with bind parameters
+  // Use MERGE to UPSERT - update if exists, insert if not
+  // Pass timestamp explicitly in UTC to avoid timezone issues
+  const scannedAtUTC = new Date().toISOString();
+
   const query = `
-    INSERT INTO SCANNED_REPOS (
-      REPO_OWNER,
-      REPO_NAME,
-      LANGUAGE,
-      SAFETY_SCORE,
-      FINDINGS,
-      SCANNED_BY
-    ) SELECT ?, ?, ?, ?, PARSE_JSON(?), ?
+    MERGE INTO SCANNED_REPOS AS target
+    USING (
+      SELECT
+        ? AS REPO_OWNER,
+        ? AS REPO_NAME,
+        ? AS LANGUAGE,
+        ? AS SAFETY_SCORE,
+        PARSE_JSON(?) AS FINDINGS,
+        ? AS SCANNED_BY,
+        ? AS SCANNED_AT
+    ) AS source
+    ON target.REPO_OWNER = source.REPO_OWNER
+       AND target.REPO_NAME = source.REPO_NAME
+    WHEN MATCHED THEN
+      UPDATE SET
+        LANGUAGE = source.LANGUAGE,
+        SAFETY_SCORE = source.SAFETY_SCORE,
+        FINDINGS = source.FINDINGS,
+        SCANNED_BY = source.SCANNED_BY,
+        SCANNED_AT = source.SCANNED_AT
+    WHEN NOT MATCHED THEN
+      INSERT (REPO_OWNER, REPO_NAME, LANGUAGE, SAFETY_SCORE, FINDINGS, SCANNED_BY, SCANNED_AT)
+      VALUES (source.REPO_OWNER, source.REPO_NAME, source.LANGUAGE, source.SAFETY_SCORE, source.FINDINGS, source.SCANNED_BY, source.SCANNED_AT)
   `;
 
   await executeQuery(query, [
@@ -87,9 +105,10 @@ export async function insertScannedRepo(data: {
     data.safetyScore,
     JSON.stringify(data.findings),
     data.scannedBy,
+    scannedAtUTC,
   ]);
 
-  console.log(`✅ Successfully saved scan to Snowflake: ${data.repoOwner}/${data.repoName}`);
+  console.log(`✅ Successfully saved scan to Snowflake: ${data.repoOwner}/${data.repoName} at ${scannedAtUTC}`);
 }
 
 export async function getScannedRepos(limit: number = 100): Promise<any[]> {

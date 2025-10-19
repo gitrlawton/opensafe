@@ -726,12 +726,13 @@ Return JSON in this exact format:
   "corrections": ["List of all corrections made, or empty array if none"],
   "scanResult": {
     "repoUrl": "same as input",
-    "repoMetadata": "same as input",
     "findings": "corrected findings with non-contributor threats removed",
     "safetyLevel": "corrected safety level based on remaining findings and reputation",
     "aiSummary": "generated summary reflecting contributor safety, reputation, and final safety level"
   }
-}`;
+}
+
+NOTE: Do NOT include "repoMetadata" in your response - it will be preserved from the original scan data.`;
 
     log(`   ⏳ Waiting for Gemini response...`);
     const result = await this.geminiService.callGeminiJSON<any>(prompt, {
@@ -760,6 +761,8 @@ Return JSON in this exact format:
                 properties: {
                   owner: { type: SchemaType.STRING },
                   name: { type: SchemaType.STRING },
+                  defaultBranch: { type: SchemaType.STRING },
+                  language: { type: SchemaType.STRING },
                   description: { type: SchemaType.STRING },
                   stars: { type: SchemaType.NUMBER },
                   forks: { type: SchemaType.NUMBER },
@@ -861,7 +864,6 @@ Return JSON in this exact format:
             },
             required: [
               "repoUrl",
-              "repoMetadata",
               "findings",
               "safetyLevel",
               "aiSummary",
@@ -880,9 +882,10 @@ Return JSON in this exact format:
     }
 
     // Extract the validated scan result
+    // Always use original metadata - don't let Gemini modify it
     const validatedResult: ScanResult = {
       repoUrl: scanData.repoUrl,
-      repoMetadata: result.scanResult?.repoMetadata || scanData.repoMetadata,
+      repoMetadata: scanData.repoMetadata, // Use original metadata with language, defaultBranch, etc.
       findings: result.scanResult?.findings || scanData.findings,
       safetyLevel:
         result.scanResult?.safetyLevel || scanData.safetyLevel || "warning",

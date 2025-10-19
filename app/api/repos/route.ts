@@ -54,9 +54,6 @@ function formatTimestamp(timestamp: string | Date): string {
   const diffHours = Math.floor(diffMins / 60);
   const diffDays = Math.floor(diffHours / 24);
 
-  // Debug log
-  console.log(`Timestamp debug: now=${now.toISOString()}, scanned=${scanned.toISOString()}, diffMins=${diffMins}`);
-
   if (diffMins < 1) return "Just now";
   if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? "s" : ""} ago`;
   if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;

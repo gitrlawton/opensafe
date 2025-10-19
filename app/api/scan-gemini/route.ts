@@ -66,6 +66,7 @@ export async function POST(request: NextRequest) {
     console.log(`[API] Starting Gemini-based scan for: ${repoUrl}`);
     const result = await workflow.scanRepository(repoUrl);
     console.log(`[API] Scan completed: ${result.safetyLevel}`);
+    console.log(`[API] Repo metadata:`, JSON.stringify(result.repoMetadata, null, 2));
 
     // Map safety level from scan result to database format
     const safetyScoreMap: Record<string, "SAFE" | "CAUTION" | "UNSAFE"> = {
@@ -77,6 +78,7 @@ export async function POST(request: NextRequest) {
 
     // Detect language from repo metadata or use a default
     const language = result.repoMetadata?.language || "Unknown";
+    console.log(`[API] Detected language: ${language}`);
 
     // Save results to Snowflake
     try {

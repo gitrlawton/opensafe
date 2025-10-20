@@ -83,6 +83,14 @@ const mockRepos = [
     safetyScore: 85,
     lastScanned: "8 hours ago",
   },
+  {
+    id: "9",
+    name: "example-repo",
+    owner: "test-user",
+    language: "JavaScript",
+    safetyScore: "CAUTION",
+    lastScanned: "1 hour ago",
+  },
 ]
 
 export default function HomePage() {

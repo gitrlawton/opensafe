@@ -119,18 +119,19 @@ export class GeminiScanWorkflow {
 
       // Step 2: Detect security risks (using Gemini)
       console.log("🔎 Step 2/5: Analyzing for security risks with Gemini...");
-      const findings = await this.detectRisks(repoData);
+      const { findings, scanFolderPath: step2FolderPath } =
+        await this.detectRisks(repoData, repoUrl);
       console.log("✅ Risk analysis complete\n");
 
-      // Step 3: Calculate safety score (using Gemini) and save original findings
+      // Step 3: Calculate safety score (using Gemini)
       console.log("📊 Step 3/5: Calculating safety level with Gemini...");
       const { safetyLevel, scanFolderPath } = await this.calculateSafetyLevel(
         findings,
         repoUrl,
-        repoData.repoMetadata
+        repoData.repoMetadata,
+        step2FolderPath
       );
-      console.log(`✅ Safety level: ${safetyLevel.toUpperCase()}`);
-      console.log(`💾 Original findings saved\n`);
+      console.log(`✅ Safety level: ${safetyLevel.toUpperCase()}\n`);
 
       // Step 4: Validation and final summary generation (using Gemini)
       console.log("✔️  Step 4/4: Validating scan results with Gemini...");
@@ -142,14 +143,14 @@ export class GeminiScanWorkflow {
       });
       console.log("✅ Validation complete\n");
 
-      // Save finalized findings
+      // Save Step 4 findings
       this.saveScanFindings(
         repoUrl,
         validatedResult,
-        "finalized-findings.json",
+        "step-4-findings.json",
         scanFolderPath
       );
-      console.log(`💾 Finalized findings saved\n`);
+      console.log(`💾 All step findings saved to: ${scanFolderPath}\n`);
 
       return validatedResult;
     } catch (error) {
@@ -269,7 +270,10 @@ export class GeminiScanWorkflow {
   /**
    * Step 2: Detect security risks using Gemini
    */
-  private async detectRisks(repoData: any): Promise<Findings> {
+  private async detectRisks(
+    repoData: any,
+    repoUrl: string
+  ): Promise<{ findings: Findings; scanFolderPath: string }> {
     const log = (msg: string) => console.log(`   ${msg}`);
 
     log(`🤖 Preparing Risk Detection Analysis with Gemini...`);
@@ -364,7 +368,7 @@ SEVERITY RULES - ONLY report "moderate" or "severe":
 - DO NOT report "low" severity findings - skip them entirely to save tokens
 
 IMPORTANT GUIDELINES:
-- Be concise: Keep "issue" explanations to 8-10 words maximum
+- Be concise: Keep "issue" explanations to one sentence maximum
 - codeSnippet: MAXIMUM 1-2 lines, only the exact line with the issue (no context)
 - Context matters: CI/CD and dev tooling are normal, not threats
 - If no moderate/severe issues found in a category, return empty array
@@ -373,7 +377,7 @@ REQUIRED JSON SCHEMA - Each finding MUST include:
 {
   "item": "Short label/title for issue (max 4-5 words)",
   "location": "Exact file path",
-  "issue": "Brief explanation of threat to contributors (8-10 words max)",
+  "issue": "Brief explanation of threat to contributors (one sentence max)",
   "severity": "moderate" | "severe",
   "codeSnippet": "ONLY the specific line with issue - 1-2 lines MAX, no surrounding context",
   "batchId": ${batchNum},
@@ -422,7 +426,14 @@ Return JSON in this exact format:
                         codeSnippet: { type: SchemaType.STRING },
                         batchId: { type: SchemaType.NUMBER },
                       },
-                      required: ["item", "location", "issue", "severity"],
+                      required: [
+                        "item",
+                        "location",
+                        "issue",
+                        "severity",
+                        "codeSnippet",
+                        "batchId",
+                      ],
                     },
                   },
                   dependencies: {
@@ -438,7 +449,14 @@ Return JSON in this exact format:
                         batchId: { type: SchemaType.NUMBER },
                         dependencyUrl: { type: SchemaType.STRING },
                       },
-                      required: ["item", "location", "issue", "severity"],
+                      required: [
+                        "item",
+                        "location",
+                        "issue",
+                        "severity",
+                        "codeSnippet",
+                        "batchId",
+                      ],
                     },
                   },
                   networkActivity: {
@@ -453,7 +471,14 @@ Return JSON in this exact format:
                         codeSnippet: { type: SchemaType.STRING },
                         batchId: { type: SchemaType.NUMBER },
                       },
-                      required: ["item", "location", "issue", "severity"],
+                      required: [
+                        "item",
+                        "location",
+                        "issue",
+                        "severity",
+                        "codeSnippet",
+                        "batchId",
+                      ],
                     },
                   },
                   fileSystemSafety: {
@@ -468,7 +493,14 @@ Return JSON in this exact format:
                         codeSnippet: { type: SchemaType.STRING },
                         batchId: { type: SchemaType.NUMBER },
                       },
-                      required: ["item", "location", "issue", "severity"],
+                      required: [
+                        "item",
+                        "location",
+                        "issue",
+                        "severity",
+                        "codeSnippet",
+                        "batchId",
+                      ],
                     },
                   },
                   credentialSafety: {
@@ -483,7 +515,14 @@ Return JSON in this exact format:
                         codeSnippet: { type: SchemaType.STRING },
                         batchId: { type: SchemaType.NUMBER },
                       },
-                      required: ["item", "location", "issue", "severity"],
+                      required: [
+                        "item",
+                        "location",
+                        "issue",
+                        "severity",
+                        "codeSnippet",
+                        "batchId",
+                      ],
                     },
                   },
                 },
@@ -556,19 +595,28 @@ Return JSON in this exact format:
     }
 
     log(`   ✅ All batches analyzed`);
-    log(`   📊 Total findings: ${Object.values(allFindings).flat().length}\n`);
+    log(`   📊 Total findings: ${Object.values(allFindings).flat().length}`);
 
-    return allFindings;
+    // Save Step 2 findings
+    const step2FilePath = this.saveScanFindings(
+      repoUrl,
+      allFindings,
+      "step-2-findings.json"
+    );
+    const scanFolderPath = path.dirname(step2FilePath);
+    log(`   💾 Step 2 findings saved\n`);
+
+    return { findings: allFindings, scanFolderPath };
   }
 
   /**
    * Step 3: Calculate safety level using Gemini
-   * Also saves original findings for debugging
    */
   private async calculateSafetyLevel(
     findings: Findings,
     repoUrl: string,
-    repoMetadata: any
+    repoMetadata: any,
+    existingFolderPath: string
   ): Promise<{ safetyLevel: string; scanFolderPath: string }> {
     const log = (msg: string) => console.log(`   ${msg}`);
 
@@ -632,25 +680,18 @@ Return JSON in this exact format:
 
     log(`   ✅ Safety level determined: ${result.safetyLevel.toUpperCase()}`);
 
-    // Save original findings (before validation)
-    const originalScanData = {
+    // Save Step 3 findings
+    this.saveScanFindings(
       repoUrl,
-      repoMetadata,
-      findings,
-      safetyLevel: result.safetyLevel,
-      scannedAt: new Date().toISOString(),
-    };
-    const originalPath = this.saveScanFindings(
-      repoUrl,
-      originalScanData,
-      "original-findings.json"
+      result,
+      "step-3-findings.json",
+      existingFolderPath
     );
-
-    const scanFolderPath = path.dirname(originalPath);
+    log(`   💾 Step 3 findings saved`);
 
     return {
       safetyLevel: result.safetyLevel,
-      scanFolderPath,
+      scanFolderPath: existingFolderPath,
     };
   }
 
@@ -686,7 +727,12 @@ YOUR RESPONSIBILITIES:
    - Credential harvesting from contributor environments
    - System compromise threats (malware, backdoors, crypto miners)
 
-4. EVALUATE repository reputation and apply reputation-based safety rules:
+4. PRESERVE all fields for remaining findings:
+   - CRITICAL: For findings you keep, preserve ALL original fields including: item, location, issue, severity, codeSnippet, batchId, dependencyUrl
+   - Do NOT drop the "issue" or "codeSnippet" fields - these are essential for displaying findings to users
+   - Only remove entire findings that aren't threats, but keep all fields for findings that remain
+
+5. EVALUATE repository reputation and apply reputation-based safety rules:
 
    REPUTABLE:
    - GitHub accounts known to be trustworthy (reputable companies or organizations)
@@ -702,12 +748,12 @@ YOUR RESPONSIBILITIES:
      → Keep moderate findings and mark as "caution"
      → Keep severe findings and mark as "unsafe"
 
-5. ADJUST safetyLevel based on reputation and remaining findings:
+6. ADJUST safetyLevel based on reputation and remaining findings:
    - "safe": Reputable repo with only moderate findings, OR no moderate/severe findings
    - "caution": Unknown repo with moderate findings
    - "unsafe": Any severe findings (regardless of reputation)
 
-6. GENERATE aiSummary to reflect corrected findings, reputation, and safety level
+7. GENERATE aiSummary to reflect corrected findings, reputation, and safety level
 
    For safe repositories, follow this format:
    """
@@ -718,7 +764,7 @@ YOUR RESPONSIBILITIES:
 
    For caution/unsafe repositories, state the specific threats to contributors.
 
-7. Note all corrections you make
+8. Note all corrections you make
 
 Return JSON in this exact format:
 {
@@ -726,10 +772,31 @@ Return JSON in this exact format:
   "corrections": ["List of all corrections made, or empty array if none"],
   "scanResult": {
     "repoUrl": "same as input",
-    "findings": "corrected findings with non-contributor threats removed",
+    "findings": "corrected findings with non-contributor threats removed - PRESERVE all fields (item, location, issue, severity, codeSnippet, batchId, dependencyUrl) for remaining findings",
     "safetyLevel": "corrected safety level based on remaining findings and reputation",
     "aiSummary": "generated summary reflecting contributor safety, reputation, and final safety level"
   }
+}
+
+EXAMPLE of preserving all fields when keeping a finding:
+Original finding:
+{
+  "item": "Malicious Script Creation",
+  "location": "scripts/init.js",
+  "issue": "Creates script that collects and exfiltrates sensitive data.",
+  "severity": "severe",
+  "codeSnippet": "fs.writeFileSync(trackerPath, trackerContent);",
+  "batchId": 1
+}
+
+Validated finding (ALL FIELDS PRESERVED):
+{
+  "item": "Malicious Script Creation",
+  "location": "scripts/init.js",
+  "issue": "Creates script that collects and exfiltrates sensitive data.",
+  "severity": "severe",
+  "codeSnippet": "fs.writeFileSync(trackerPath, trackerContent);",
+  "batchId": 1
 }
 
 NOTE: Do NOT include "repoMetadata" in your response - it will be preserved from the original scan data.`;
@@ -784,6 +851,14 @@ NOTE: Do NOT include "repoMetadata" in your response - it will be preserved from
                         codeSnippet: { type: SchemaType.STRING },
                         batchId: { type: SchemaType.NUMBER },
                       },
+                      required: [
+                        "item",
+                        "location",
+                        "issue",
+                        "severity",
+                        "codeSnippet",
+                        "batchId",
+                      ],
                     },
                   },
                   dependencies: {
@@ -799,6 +874,14 @@ NOTE: Do NOT include "repoMetadata" in your response - it will be preserved from
                         batchId: { type: SchemaType.NUMBER },
                         dependencyUrl: { type: SchemaType.STRING },
                       },
+                      required: [
+                        "item",
+                        "location",
+                        "issue",
+                        "severity",
+                        "codeSnippet",
+                        "batchId",
+                      ],
                     },
                   },
                   networkActivity: {
@@ -813,6 +896,14 @@ NOTE: Do NOT include "repoMetadata" in your response - it will be preserved from
                         codeSnippet: { type: SchemaType.STRING },
                         batchId: { type: SchemaType.NUMBER },
                       },
+                      required: [
+                        "item",
+                        "location",
+                        "issue",
+                        "severity",
+                        "codeSnippet",
+                        "batchId",
+                      ],
                     },
                   },
                   fileSystemSafety: {
@@ -827,6 +918,14 @@ NOTE: Do NOT include "repoMetadata" in your response - it will be preserved from
                         codeSnippet: { type: SchemaType.STRING },
                         batchId: { type: SchemaType.NUMBER },
                       },
+                      required: [
+                        "item",
+                        "location",
+                        "issue",
+                        "severity",
+                        "codeSnippet",
+                        "batchId",
+                      ],
                     },
                   },
                   credentialSafety: {
@@ -841,6 +940,14 @@ NOTE: Do NOT include "repoMetadata" in your response - it will be preserved from
                         codeSnippet: { type: SchemaType.STRING },
                         batchId: { type: SchemaType.NUMBER },
                       },
+                      required: [
+                        "item",
+                        "location",
+                        "issue",
+                        "severity",
+                        "codeSnippet",
+                        "batchId",
+                      ],
                     },
                   },
                 },
@@ -862,12 +969,7 @@ NOTE: Do NOT include "repoMetadata" in your response - it will be preserved from
                   "Human-readable summary of the security assessment",
               },
             },
-            required: [
-              "repoUrl",
-              "findings",
-              "safetyLevel",
-              "aiSummary",
-            ],
+            required: ["repoUrl", "findings", "safetyLevel", "aiSummary"],
           },
         },
         required: ["validated", "corrections", "scanResult"],

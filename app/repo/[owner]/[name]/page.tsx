@@ -370,7 +370,7 @@ export default async function RepoDetailPage({ params }: PageProps) {
                                       Location: {finding.location}
                                     </p>
                                     {finding.codeSnippet && (
-                                      <pre className="mt-2 text-xs bg-muted p-2 rounded overflow-x-auto">
+                                      <pre className="mt-2 text-xs bg-muted p-2 rounded whitespace-pre-wrap break-words">
                                         {finding.codeSnippet}
                                       </pre>
                                     )}

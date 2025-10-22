@@ -1,15 +1,27 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { withPageAuthRequired } from "@auth0/nextjs-auth0/client"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Loader2, Github, CheckCircle2, Brain, AlertCircle } from "lucide-react"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { withPageAuthRequired } from "@auth0/nextjs-auth0/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import {
+  Loader2,
+  Github,
+  CheckCircle2,
+  Brain,
+  AlertCircle,
+} from "lucide-react";
 
 const SCANNING_STEPS = [
   "Cloning repository...",
@@ -22,50 +34,58 @@ const SCANNING_STEPS = [
   "Checking for credential harvesting patterns...",
   "Verifying maintainer authenticity...",
   "Generating security report...",
-]
+];
 
-const COMMON_LANGUAGES = ["JavaScript", "TypeScript", "Python", "Go", "Rust", "Java", "C++"]
+const COMMON_LANGUAGES = [
+  "JavaScript",
+  "TypeScript",
+  "Python",
+  "Go",
+  "Rust",
+  "Java",
+  "C++",
+];
 
 function ScanPage() {
-  const router = useRouter()
-  const [repoUrl, setRepoUrl] = useState("")
-  const [isScanning, setIsScanning] = useState(false)
-  const [scanComplete, setScanComplete] = useState(false)
-  const [scanError, setScanError] = useState<string | null>(null)
-  const [currentStep, setCurrentStep] = useState(0)
+  const router = useRouter();
+  const [repoUrl, setRepoUrl] = useState("");
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanComplete, setScanComplete] = useState(false);
+  const [scanError, setScanError] = useState<string | null>(null);
+  const [currentStep, setCurrentStep] = useState(0);
 
   useEffect(() => {
-    if (!isScanning) return
+    if (!isScanning) return;
 
     const interval = setInterval(() => {
       setCurrentStep((prev) => {
         if (prev < SCANNING_STEPS.length - 1) {
-          return prev + 1
+          return prev + 1;
         }
-        return prev
-      })
-    }, 600) // Change step every 600ms
+        return prev;
+      });
+    }, 600); // Change step every 600ms
 
-    return () => clearInterval(interval)
-  }, [isScanning])
+    return () => clearInterval(interval);
+  }, [isScanning]);
 
   const handleScan = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsScanning(true)
-    setScanComplete(false)
-    setScanError(null)
-    setCurrentStep(0)
+    e.preventDefault();
+    setIsScanning(true);
+    setScanComplete(false);
+    setScanError(null);
+    setCurrentStep(0);
 
-    const urlMatch = repoUrl.match(/github\.com\/([^/]+)\/([^/]+)/)
+    const urlMatch = repoUrl.match(/github\.com\/([^/]+)\/([^/]+)/);
 
     if (!urlMatch) {
-      setScanError("Invalid GitHub repository URL")
-      setIsScanning(false)
-      return
+      setScanError("Invalid GitHub repository URL");
+      setIsScanning(false);
+      return;
     }
 
-    const [, owner, repo] = urlMatch
-    const cleanRepo = repo.replace(/\.git$/, "")
+    const [, owner, repo] = urlMatch;
+    const cleanRepo = repo.replace(/\.git$/, "");
 
     try {
       // Call the real Gemini scan API
@@ -75,37 +95,39 @@ function ScanPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ repoUrl }),
-      })
+      });
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || "Scan failed")
+        const error = await response.json();
+        throw new Error(error.message || "Scan failed");
       }
 
-      const result = await response.json()
+      const result = await response.json();
 
-      setIsScanning(false)
-      setScanComplete(true)
+      setIsScanning(false);
+      setScanComplete(true);
 
       // Redirect to results page after a short delay
       setTimeout(() => {
-        router.push(`/repo/${owner}/${cleanRepo}`)
-      }, 1500)
+        router.push(`/repo/${owner}/${cleanRepo}`);
+      }, 1500);
     } catch (error: any) {
-      console.error("Scan error:", error)
-      setScanError(error.message || "An error occurred during scanning")
-      setIsScanning(false)
+      console.error("Scan error:", error);
+      setScanError(error.message || "An error occurred during scanning");
+      setIsScanning(false);
     }
-  }
+  };
 
   return (
-    <div className="min-h-screen bg-background">
-
-      <main className="container mx-auto px-4 py-12 max-w-2xl">
+    <div className="min-h-screen bg-background flex items-start justify-center pt-32">
+      <main className="container mx-auto px-4 max-w-2xl">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2 text-balance">Scan New Repository</h1>
+          <h1 className="text-4xl font-bold mb-2 text-balance">
+            Scan New Repository
+          </h1>
           <p className="text-lg text-muted-foreground text-pretty">
-            Submit a GitHub repository URL to scan for malicious code, suspicious dependencies, and security threats.
+            Submit a GitHub repository URL to scan for malicious code,
+            suspicious dependencies, and security threats.
           </p>
         </div>
 
@@ -113,7 +135,8 @@ function ScanPage() {
           <CardHeader>
             <CardTitle>Repository URL</CardTitle>
             <CardDescription>
-              Enter the full GitHub repository URL (e.g., https://github.com/owner/repository)
+              Enter the full GitHub repository URL (e.g.,
+              https://github.com/owner/repository)
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -140,7 +163,9 @@ function ScanPage() {
                   <Brain className="h-5 w-5 text-primary mt-0.5 flex-shrink-0 animate-pulse" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium mb-1">Scanning</p>
-                    <p className="text-sm text-muted-foreground">{SCANNING_STEPS[currentStep]}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {SCANNING_STEPS[currentStep]}
+                    </p>
                   </div>
                 </div>
               )}
@@ -148,7 +173,9 @@ function ScanPage() {
               {scanComplete && !isScanning && (
                 <div className="flex items-center gap-2 p-4 rounded-lg bg-success/10 text-success border border-success/20">
                   <CheckCircle2 className="h-5 w-5" />
-                  <p className="text-sm font-medium">Scan complete! Redirecting to results...</p>
+                  <p className="text-sm font-medium">
+                    Scan complete! Redirecting to results...
+                  </p>
                 </div>
               )}
 
@@ -159,7 +186,11 @@ function ScanPage() {
                 </div>
               )}
 
-              <Button type="submit" disabled={isScanning || !repoUrl} className="w-full">
+              <Button
+                type="submit"
+                disabled={isScanning || !repoUrl}
+                className="w-full"
+              >
                 {isScanning ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -171,7 +202,7 @@ function ScanPage() {
               </Button>
             </form>
 
-            <div className="mt-8 pt-6 border-t border-border">
+            {/* <div className="mt-8 pt-6 border-t border-border">
               <h3 className="font-semibold mb-3">Security checks performed:</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li className="flex items-start gap-2">
@@ -199,12 +230,12 @@ function ScanPage() {
                   <span>Maintainer verification and repository authenticity</span>
                 </li>
               </ul>
-            </div>
+            </div> */}
           </CardContent>
         </Card>
       </main>
     </div>
-  )
+  );
 }
 
 export default withPageAuthRequired(ScanPage);

@@ -71,8 +71,8 @@ export async function POST(request: NextRequest) {
     // Map safety level from scan result to database format
     const safetyScoreMap: Record<string, "SAFE" | "CAUTION" | "UNSAFE"> = {
       safe: "SAFE",
-      warning: "CAUTION",
-      severe: "UNSAFE",
+      caution: "CAUTION",
+      unsafe: "UNSAFE",
     };
     const safetyScore = safetyScoreMap[result.safetyLevel] || "CAUTION";
 

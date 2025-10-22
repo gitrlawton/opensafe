@@ -235,7 +235,7 @@ export default async function RepoDetailPage({ params }: PageProps) {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>AI Analysis Summary</CardTitle>
+              <CardTitle>Analysis Summary</CardTitle>
               <CardDescription>
                 Automated security and safety assessment
               </CardDescription>

@@ -27,7 +27,7 @@ export class GeminiService {
 
   constructor(config: GeminiServiceConfig) {
     this.genAI = new GoogleGenerativeAI(config.apiKey);
-    this.model = config.model || "gemini-2.5-flash-lite";
+    this.model = config.model || "gemini-2.5-pro";
   }
 
   /**

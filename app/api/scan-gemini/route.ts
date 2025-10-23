@@ -4,9 +4,15 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { GeminiScanWorkflow } from "@/lib/scan-gemini/workflow-gemini";
+import { GeminiScanWorkflow } from "@/lib/ai/gemini/scan-workflow";
 import { auth0 } from "@/lib/auth0";
-import { insertScannedRepo } from "@/lib/snowflake";
+import { insertScannedRepo } from "@/lib/database/snowflake";
+import {
+  mapSafetyLevelToScore,
+  parseGitHubUrl,
+  createApiError,
+  logError,
+} from "@/lib/utils";
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,15 +37,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Extract repo owner and name from URL
-    const urlMatch = repoUrl.match(/github\.com\/([^/]+)\/([^/]+)/);
-    if (!urlMatch) {
+    let repoOwner: string;
+    let cleanRepoName: string;
+    try {
+      const parsed = parseGitHubUrl(repoUrl);
+      repoOwner = parsed.owner;
+      cleanRepoName = parsed.repo;
+    } catch (error) {
       return NextResponse.json(
-        { error: "Invalid GitHub repository URL" },
+        createApiError("Invalid GitHub repository URL"),
         { status: 400 }
       );
     }
-    const [, repoOwner, repoName] = urlMatch;
-    const cleanRepoName = repoName.replace(/\.git$/, "");
 
     // Validate environment variables
     const geminiApiKey = process.env.GEMINI_API_KEY;
@@ -69,12 +78,7 @@ export async function POST(request: NextRequest) {
     console.log(`[API] Repo metadata:`, JSON.stringify(result.repoMetadata, null, 2));
 
     // Map safety level from scan result to database format
-    const safetyScoreMap: Record<string, "SAFE" | "CAUTION" | "UNSAFE"> = {
-      safe: "SAFE",
-      caution: "CAUTION",
-      unsafe: "UNSAFE",
-    };
-    const safetyScore = safetyScoreMap[result.safetyLevel] || "CAUTION";
+    const safetyScore = mapSafetyLevelToScore(result.safetyLevel);
 
     // Detect language from repo metadata or use a default
     const language = result.repoMetadata?.language || "Unknown";
@@ -91,23 +95,17 @@ export async function POST(request: NextRequest) {
         scannedBy: session.user.email || session.user.name || "unknown",
       });
       console.log(`[API] Scan results saved to Snowflake for ${repoOwner}/${cleanRepoName}`);
-    } catch (snowflakeError: any) {
-      console.error("[API] Failed to save to Snowflake:", snowflakeError);
+    } catch (snowflakeError) {
+      logError("[API]", "Failed to save to Snowflake", snowflakeError);
       // Continue even if Snowflake save fails - don't fail the entire request
     }
 
     // Return results
     return NextResponse.json(result, { status: 200 });
-  } catch (error: any) {
-    console.error("[API] Scan error:", error);
+  } catch (error) {
+    logError("[API]", "Scan error", error);
 
-    return NextResponse.json(
-      {
-        error: "Scan failed",
-        message: error.message || "Unknown error occurred",
-      },
-      { status: 500 }
-    );
+    return NextResponse.json(createApiError("Scan failed"), { status: 500 });
   }
 }
 

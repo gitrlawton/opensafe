@@ -81,7 +81,7 @@ Content-Type: application/json
 ### Programmatic Usage
 
 ```typescript
-import { GeminiScanWorkflow } from "@/lib/scan-gemini/workflow-gemini";
+import { GeminiScanWorkflow } from "@/lib/ai/gemini/scan-workflow";
 
 const workflow = new GeminiScanWorkflow({
   geminiApiKey: process.env.GEMINI_API_KEY!,

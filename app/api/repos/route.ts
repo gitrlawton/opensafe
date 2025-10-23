@@ -4,11 +4,13 @@
  */
 
 import { NextResponse } from "next/server";
-import { getScannedRepos } from "@/lib/snowflake";
+import { getScannedRepos } from "@/lib/database/snowflake";
+import { formatTimestamp, createApiError, logError } from "@/lib/utils";
+import { MAX_REPOS_FETCH_LIMIT } from "@/lib/constants";
 
 export async function GET() {
   try {
-    const repos = await getScannedRepos(100); // Get last 100 scans
+    const repos = await getScannedRepos(MAX_REPOS_FETCH_LIMIT);
 
     // Transform Snowflake data to match frontend format
     const transformedRepos = repos.map((repo: any) => ({
@@ -22,42 +24,12 @@ export async function GET() {
     }));
 
     return NextResponse.json(transformedRepos, { status: 200 });
-  } catch (error: any) {
-    console.error("[API] Failed to fetch repos from Snowflake:", error);
+  } catch (error) {
+    logError("[API]", "Failed to fetch repos from Snowflake", error);
 
     return NextResponse.json(
-      {
-        error: "Failed to fetch repositories",
-        message: error.message || "Unknown error occurred",
-      },
+      createApiError("Failed to fetch repositories"),
       { status: 500 }
     );
   }
-}
-
-function formatTimestamp(timestamp: string | Date): string {
-  if (!timestamp) return "Unknown";
-
-  // Snowflake returns TIMESTAMP_NTZ in format like "2025-01-19T08:23:31.000Z"
-  // Parse it as UTC and convert to local time
-  const scanned = new Date(timestamp);
-
-  // Check if the date is valid
-  if (isNaN(scanned.getTime())) {
-    console.error("Invalid timestamp:", timestamp);
-    return "Unknown";
-  }
-
-  const now = new Date();
-  const diffMs = now.getTime() - scanned.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMins / 60);
-  const diffDays = Math.floor(diffHours / 24);
-
-  if (diffMins < 1) return "Just now";
-  if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? "s" : ""} ago`;
-  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
-  if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
-
-  return scanned.toLocaleDateString();
 }

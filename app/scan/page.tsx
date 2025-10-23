@@ -15,36 +15,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import {
-  Loader2,
-  Github,
-  CheckCircle2,
-  Brain,
-  AlertCircle,
-} from "lucide-react";
-
-const SCANNING_STEPS = [
-  "Cloning repository...",
-  "Scanning package.json for dependencies...",
-  "Analyzing node_modules for suspicious packages...",
-  "Checking for hidden install scripts...",
-  "Detecting obfuscated code patterns...",
-  "Scanning for crypto mining signatures...",
-  "Analyzing network call destinations...",
-  "Checking for credential harvesting patterns...",
-  "Verifying maintainer authenticity...",
-  "Generating security report...",
-];
-
-const COMMON_LANGUAGES = [
-  "JavaScript",
-  "TypeScript",
-  "Python",
-  "Go",
-  "Rust",
-  "Java",
-  "C++",
-];
+import { parseGitHubUrl, isValidGitHubUrl } from "@/lib/utils";
+import { Loader2, Github } from "lucide-react";
+import { ScanningProgress, SCANNING_STEPS_COUNT } from "./scanning-progress";
+import { PageLayout, PageContainer } from "@/components/page-layout";
+import { PageHeader } from "@/components/page-header";
+import { ErrorMessage, SuccessMessage } from "@/components/ui-states";
 
 function ScanPage() {
   const router = useRouter();
@@ -59,7 +35,7 @@ function ScanPage() {
 
     const interval = setInterval(() => {
       setCurrentStep((prev) => {
-        if (prev < SCANNING_STEPS.length - 1) {
+        if (prev < SCANNING_STEPS_COUNT - 1) {
           return prev + 1;
         }
         return prev;
@@ -76,16 +52,13 @@ function ScanPage() {
     setScanError(null);
     setCurrentStep(0);
 
-    const urlMatch = repoUrl.match(/github\.com\/([^/]+)\/([^/]+)/);
-
-    if (!urlMatch) {
+    if (!isValidGitHubUrl(repoUrl)) {
       setScanError("Invalid GitHub repository URL");
       setIsScanning(false);
       return;
     }
 
-    const [, owner, repo] = urlMatch;
-    const cleanRepo = repo.replace(/\.git$/, "");
+    const { owner, repo: cleanRepo } = parseGitHubUrl(repoUrl);
 
     try {
       // Call the real Gemini scan API
@@ -119,17 +92,12 @@ function ScanPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-start justify-center pt-32">
-      <main className="container mx-auto px-4 max-w-2xl">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2 text-balance">
-            Scan New Repository
-          </h1>
-          <p className="text-lg text-muted-foreground text-pretty">
-            Submit a GitHub repository URL to scan for malicious code,
-            suspicious dependencies, and security threats.
-          </p>
-        </div>
+    <PageLayout className="flex items-start justify-center pt-32">
+      <PageContainer maxWidth="2xl">
+        <PageHeader
+          title="Scan New Repository"
+          description="Submit a GitHub repository URL to scan for malicious code, suspicious dependencies, and security threats."
+        />
 
         <Card>
           <CardHeader>
@@ -158,33 +126,13 @@ function ScanPage() {
                 </div>
               </div>
 
-              {isScanning && (
-                <div className="flex items-start gap-3 p-4 rounded-lg bg-muted/50 border border-border">
-                  <Brain className="h-5 w-5 text-primary mt-0.5 flex-shrink-0 animate-pulse" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium mb-1">Scanning</p>
-                    <p className="text-sm text-muted-foreground">
-                      {SCANNING_STEPS[currentStep]}
-                    </p>
-                  </div>
-                </div>
-              )}
+              {isScanning && <ScanningProgress currentStep={currentStep} />}
 
               {scanComplete && !isScanning && (
-                <div className="flex items-center gap-2 p-4 rounded-lg bg-success/10 text-success border border-success/20">
-                  <CheckCircle2 className="h-5 w-5" />
-                  <p className="text-sm font-medium">
-                    Scan complete! Redirecting to results...
-                  </p>
-                </div>
+                <SuccessMessage message="Scan complete! Redirecting to results..." />
               )}
 
-              {scanError && !isScanning && (
-                <div className="flex items-center gap-2 p-4 rounded-lg bg-destructive/10 text-destructive border border-destructive/20">
-                  <AlertCircle className="h-5 w-5" />
-                  <p className="text-sm font-medium">{scanError}</p>
-                </div>
-              )}
+              {scanError && !isScanning && <ErrorMessage message={scanError} />}
 
               <Button
                 type="submit"
@@ -201,40 +149,10 @@ function ScanPage() {
                 )}
               </Button>
             </form>
-
-            {/* <div className="mt-8 pt-6 border-t border-border">
-              <h3 className="font-semibold mb-3">Security checks performed:</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-success mt-0.5 flex-shrink-0" />
-                  <span>Crypto miners, keyloggers, and backdoor detection</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-success mt-0.5 flex-shrink-0" />
-                  <span>Hidden install scripts and post-install hooks analysis</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-success mt-0.5 flex-shrink-0" />
-                  <span>Suspicious dependencies and package integrity verification</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-success mt-0.5 flex-shrink-0" />
-                  <span>Credential harvesting and data exfiltration patterns</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-success mt-0.5 flex-shrink-0" />
-                  <span>Obfuscated code and suspicious network calls</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-success mt-0.5 flex-shrink-0" />
-                  <span>Maintainer verification and repository authenticity</span>
-                </li>
-              </ul>
-            </div> */}
           </CardContent>
         </Card>
-      </main>
-    </div>
+      </PageContainer>
+    </PageLayout>
   );
 }
 

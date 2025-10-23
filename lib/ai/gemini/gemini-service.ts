@@ -3,16 +3,20 @@
  */
 
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
+import { sleep } from "@/lib/utils";
+import {
+  DEFAULT_GEMINI_MODEL,
+  GEMINI_MIN_REQUEST_INTERVAL_MS,
+  GEMINI_MAX_RETRIES,
+  GEMINI_DEFAULT_TEMPERATURE,
+  GEMINI_MAX_OUTPUT_TOKENS,
+  GEMINI_RATE_LIMIT_BASE_WAIT_MS,
+  GEMINI_RETRY_WAIT_MS,
+  MS_PER_MINUTE,
+} from "@/lib/constants";
 
 // Re-export SchemaType for use in workflow
 export { SchemaType };
-
-/**
- * Sleep utility for rate limiting
- */
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 export interface GeminiServiceConfig {
   apiKey: string;
@@ -23,11 +27,11 @@ export class GeminiService {
   private genAI: GoogleGenerativeAI;
   private model: string;
   private lastRequestTime: number = 0;
-  private minRequestInterval: number = 6000; // 6 seconds (10 RPM = 6s between requests)
+  private minRequestInterval: number = GEMINI_MIN_REQUEST_INTERVAL_MS;
 
   constructor(config: GeminiServiceConfig) {
     this.genAI = new GoogleGenerativeAI(config.apiKey);
-    this.model = config.model || "gemini-2.5-pro";
+    this.model = config.model || DEFAULT_GEMINI_MODEL;
   }
 
   /**
@@ -62,7 +66,7 @@ export class GeminiService {
       responseSchema?: any; // JSON schema for structured output
     }
   ): Promise<string> {
-    const maxRetries = options?.maxRetries ?? 3;
+    const maxRetries = options?.maxRetries ?? GEMINI_MAX_RETRIES;
     let lastError: Error | null = null;
 
     for (let attempt = 0; attempt < maxRetries; attempt++) {
@@ -78,10 +82,10 @@ export class GeminiService {
         const model = this.genAI.getGenerativeModel({
           model: this.model,
           generationConfig: {
-            temperature: options?.temperature ?? 0.3,
+            temperature: options?.temperature ?? GEMINI_DEFAULT_TEMPERATURE,
             // Gemini 2.5 Flash Lite maximum output tokens: 65,536
             // Use high default to allow room for both thinking and output
-            maxOutputTokens: options?.maxTokens ?? 65536,
+            maxOutputTokens: options?.maxTokens ?? GEMINI_MAX_OUTPUT_TOKENS,
             // Apply thinking budget if specified, otherwise unlimited
             ...(options?.thinkingBudget !== undefined && {
               thinkingConfig: {
@@ -153,7 +157,7 @@ export class GeminiService {
           error.message?.includes("429") ||
           error.message?.includes("RESOURCE_EXHAUSTED")
         ) {
-          const waitTime = Math.pow(2, attempt) * 10000; // 10s, 20s, 40s
+          const waitTime = Math.pow(2, attempt) * GEMINI_RATE_LIMIT_BASE_WAIT_MS; // 10s, 20s, 40s
           console.log(
             `      🚫 Rate limited. Waiting ${waitTime / 1000}s before retry ${attempt + 1}/${maxRetries}...`
           );
@@ -165,7 +169,7 @@ export class GeminiService {
         console.log(
           `      ❌ Request failed: ${error.message}. Retrying (${attempt + 1}/${maxRetries})...`
         );
-        await sleep(2000); // Wait 2s before retry
+        await sleep(GEMINI_RETRY_WAIT_MS);
       }
     }
 
@@ -267,7 +271,7 @@ export class GeminiService {
    */
   getRateLimitInfo(): { rpm: number; minIntervalSeconds: number } {
     return {
-      rpm: Math.floor(60000 / this.minRequestInterval),
+      rpm: Math.floor(MS_PER_MINUTE / this.minRequestInterval),
       minIntervalSeconds: this.minRequestInterval / 1000,
     };
   }

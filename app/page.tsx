@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { SafetyBadge } from "@/components/safety-badge";
 import { Input } from "@/components/ui/input";
-import { Search, Loader2 } from "lucide-react";
+import { Search } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -13,6 +13,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { PageLayout, PageContainer } from "@/components/page-layout";
+import { PageHeader } from "@/components/page-header";
+import { LoadingSpinner, EmptyState } from "@/components/ui-states";
 
 export interface ScannedRepo {
   id: string;
@@ -142,17 +145,12 @@ export default function HomePage() {
   );
 
   return (
-    <div className="min-h-screen bg-background">
-      <main className="container mx-auto px-4 py-12">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2 text-balance">
-            Verify Before You Clone
-          </h1>
-          <p className="text-lg text-muted-foreground text-pretty">
-            Scan GitHub repositories for malicious code, suspicious
-            dependencies, and security threats before cloning.
-          </p>
-        </div>
+    <PageLayout>
+      <PageContainer>
+        <PageHeader
+          title="Verify Before You Clone"
+          description="Scan GitHub repositories for malicious code, suspicious dependencies, and security threats before cloning."
+        />
 
         <div className="mb-6">
           <div className="relative max-w-md">
@@ -167,11 +165,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        {isLoading && (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          </div>
-        )}
+        {isLoading && <LoadingSpinner />}
 
         {!isLoading && (
           <div className="border border-border rounded-lg overflow-hidden bg-card">
@@ -218,11 +212,12 @@ export default function HomePage() {
         )}
 
         {!isLoading && filteredRepos.length === 0 && (
-          <div className="text-center py-12 text-muted-foreground">
-            No repositories found matching your search.
-          </div>
+          <EmptyState
+            icon={<Search className="h-12 w-12 text-muted-foreground" />}
+            message="No repositories found matching your search."
+          />
         )}
-      </main>
-    </div>
+      </PageContainer>
+    </PageLayout>
   );
 }

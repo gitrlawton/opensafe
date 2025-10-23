@@ -8,11 +8,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ArrowLeft, AlertTriangle, CheckCircle2, Info } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Info } from "lucide-react";
 import { auth0 } from "@/lib/auth0";
-import { getRepoByOwnerAndName } from "@/lib/snowflake";
+import { getRepoByOwnerAndName } from "@/lib/database/snowflake";
 import { RescanButton } from "./rescan-button";
 import { ContributorNotes } from "./contributor-notes";
+import { formatTimestamp } from "@/lib/utils";
+import { PageLayout, PageContainer } from "@/components/page-layout";
+import { BackLink } from "@/components/back-link";
 
 interface PageProps {
   params: Promise<{
@@ -123,15 +126,9 @@ export default async function RepoDetailPage({ params }: PageProps) {
   // If no data found, show not found message
   if (!repoData) {
     return (
-      <div className="min-h-screen bg-background">
-        <main className="container mx-auto px-4 py-12 max-w-4xl">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to all repositories
-          </Link>
+      <PageLayout>
+        <PageContainer maxWidth="4xl">
+          <BackLink href="/" label="Back to all repositories" />
           <Card>
             <CardHeader>
               <CardTitle>Repository Not Found</CardTitle>
@@ -149,8 +146,8 @@ export default async function RepoDetailPage({ params }: PageProps) {
               </Link>
             </CardContent>
           </Card>
-        </main>
-      </div>
+        </PageContainer>
+      </PageLayout>
     );
   }
 
@@ -183,35 +180,10 @@ export default async function RepoDetailPage({ params }: PageProps) {
     }
   };
 
-  // Format timestamp
-  const formatTimestamp = (timestamp: string) => {
-    if (!timestamp) return "Unknown";
-    const scanned = new Date(timestamp);
-    const now = new Date();
-    const diffMs = now.getTime() - scanned.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffMins < 1) return "Just now";
-    if (diffMins < 60)
-      return `${diffMins} minute${diffMins > 1 ? "s" : ""} ago`;
-    if (diffHours < 24)
-      return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
-    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
-    return scanned.toLocaleDateString();
-  };
-
   return (
-    <div className="min-h-screen bg-background">
-      <main className="container mx-auto px-4 py-12 max-w-4xl">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to all repositories
-        </Link>
+    <PageLayout>
+      <PageContainer maxWidth="4xl">
+        <BackLink href="/" label="Back to all repositories" />
 
         <div className="mb-8">
           <div className="flex items-start justify-between mb-4">
@@ -417,7 +389,7 @@ export default async function RepoDetailPage({ params }: PageProps) {
             </CardContent>
           </Card>
         </div>
-      </main>
-    </div>
+      </PageContainer>
+    </PageLayout>
   );
 }

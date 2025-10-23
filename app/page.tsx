@@ -15,7 +15,8 @@ import {
 } from "@/components/ui/table";
 import { PageLayout, PageContainer } from "@/components/page-layout";
 import { PageHeader } from "@/components/page-header";
-import { LoadingSpinner, EmptyState } from "@/components/ui-states";
+import { EmptyState } from "@/components/ui-states";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export interface ScannedRepo {
   id: string;
@@ -165,7 +166,51 @@ export default function HomePage() {
           </div>
         </div>
 
-        {isLoading && <LoadingSpinner />}
+        {error && (
+          <div className="mb-4 p-4 border border-warning/50 rounded-md bg-warning/10">
+            <p className="text-sm text-warning-foreground">
+              <strong>Note:</strong> Unable to load recent scans from the
+              database. Showing example data only. {error}
+            </p>
+          </div>
+        )}
+
+        {isLoading && (
+          <div className="border border-border rounded-lg overflow-hidden bg-card">
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="font-semibold">Repo Name</TableHead>
+                  <TableHead className="font-semibold">Owner</TableHead>
+                  <TableHead className="font-semibold">Language</TableHead>
+                  <TableHead className="font-semibold">Safety Level</TableHead>
+                  <TableHead className="font-semibold">Last Scanned</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                  <TableRow key={i} className="hover:bg-muted/50">
+                    <TableCell>
+                      <Skeleton className="h-5 w-40" />
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      <Skeleton className="h-5 w-20" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-6 w-20 rounded-md" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-7 w-10 rounded-md" />
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      <Skeleton className="h-4 w-24" />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
 
         {!isLoading && (
           <div className="border border-border rounded-lg overflow-hidden bg-card">

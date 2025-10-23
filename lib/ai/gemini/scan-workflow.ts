@@ -165,6 +165,61 @@ export class GeminiScanWorkflow {
   }
 
   /**
+   * Parse package.json content and extract install scripts
+   */
+  private parsePackageJson(
+    packageJsonContent: string | null | undefined,
+    log: (msg: string) => void
+  ): { packageJson: any; installScripts: string[] } {
+    let packageJson = null;
+    let installScripts: string[] = [];
+
+    if (!packageJsonContent) {
+      log(`⚠️  package.json not found in scanned files`);
+      return { packageJson, installScripts };
+    }
+
+    if (
+      packageJsonContent.startsWith("[Skipped") ||
+      !packageJsonContent.trim()
+    ) {
+      log(`⚠️  package.json was skipped or empty`);
+      return { packageJson, installScripts };
+    }
+
+    try {
+      packageJson = JSON.parse(packageJsonContent);
+      installScripts = this.githubClient.getInstallScripts(packageJson);
+      log(`✅ package.json parsed successfully`);
+    } catch (error: any) {
+      log(`⚠️  Failed to parse package.json: ${error.message}`);
+    }
+
+    return { packageJson, installScripts };
+  }
+
+  /**
+   * Extract dependency information from package.json
+   */
+  private extractDependencies(packageJson: any): {
+    production: string[];
+    dev: string[];
+  } {
+    return {
+      production: packageJson?.dependencies
+        ? Object.entries(packageJson.dependencies).map(
+            ([name, version]) => `${name}@${version}`
+          )
+        : [],
+      dev: packageJson?.devDependencies
+        ? Object.entries(packageJson.devDependencies).map(
+            ([name, version]) => `${name}@${version}`
+          )
+        : [],
+    };
+  }
+
+  /**
    * Step 1: Fetch repository content (GitHub API - no LLM)
    */
   private async fetchRepoContent(repoUrl: string): Promise<any> {
@@ -215,42 +270,14 @@ export class GeminiScanWorkflow {
     log(`\n✅ All files fetched from GitHub`);
 
     // Extract package.json data if available
-    let packageJson = null;
-    let installScripts: string[] = [];
-
     const packageJsonContent = scannedFiles.get("package.json");
-    if (packageJsonContent) {
-      if (
-        packageJsonContent.startsWith("[Skipped") ||
-        !packageJsonContent.trim()
-      ) {
-        log(`⚠️  package.json was skipped or empty`);
-      } else {
-        try {
-          packageJson = JSON.parse(packageJsonContent);
-          installScripts = this.githubClient.getInstallScripts(packageJson);
-          log(`✅ package.json parsed successfully`);
-        } catch (error: any) {
-          log(`⚠️  Failed to parse package.json: ${error.message}`);
-        }
-      }
-    } else {
-      log(`⚠️  package.json not found in scanned files`);
-    }
+    const { packageJson, installScripts } = this.parsePackageJson(
+      packageJsonContent,
+      log
+    );
 
     // Get dependency information
-    const dependencies = {
-      production: packageJson?.dependencies
-        ? Object.entries(packageJson.dependencies).map(
-            ([name, version]) => `${name}@${version}`
-          )
-        : [],
-      dev: packageJson?.devDependencies
-        ? Object.entries(packageJson.devDependencies).map(
-            ([name, version]) => `${name}@${version}`
-          )
-        : [],
-    };
+    const dependencies = this.extractDependencies(packageJson);
 
     // Convert scanned files map to object
     const scannedFilesObj: Record<string, string | null> = {};
@@ -273,73 +300,24 @@ export class GeminiScanWorkflow {
   }
 
   /**
-   * Step 2: Detect security risks using Gemini
+   * Build the risk detection prompt for a batch of files
    */
-  private async detectRisks(
-    repoData: any,
-    repoUrl: string
-  ): Promise<{ findings: Findings; scanFolderPath: string }> {
-    const log = (msg: string) => console.log(`   ${msg}`);
+  private buildRiskDetectionPrompt(
+    batch: string[],
+    batchNum: number,
+    repoData: any
+  ): string {
+    const batchFilesDetails = batch
+      .map((path) => {
+        const content = repoData.scannedFiles[path];
+        if (!content) return `${path}: [Could not read]`;
+        if (content.startsWith("[Skipped")) return `${path}: ${content}`;
 
-    log(`🤖 Preparing Risk Detection Analysis with Gemini...`);
-    log(
-      `   📊 ${repoData.filesScanned} security-relevant files from ${repoData.treeSize} total, including:`
-    );
-    log(
-      `   📦 ${repoData.dependencies.production.length} production dependencies`
-    );
-    log(`   🔧 ${repoData.dependencies.dev.length} dev dependencies`);
-    log(`   ⚙️  ${repoData.files.installScripts.length} install scripts`);
-    log(`   💻 ${repoData.files.executableFiles.length} executable files\n`);
+        return `\n=== ${path} ===\n${content}\n`;
+      })
+      .join("\n");
 
-    const scannedFilesList = Object.keys(repoData.scannedFiles);
-
-    // Divide files into batches
-    const batches: string[][] = [];
-    for (let i = 0; i < scannedFilesList.length; i += SCAN_BATCH_SIZE) {
-      batches.push(scannedFilesList.slice(i, i + SCAN_BATCH_SIZE));
-    }
-
-    log(
-      `   📦 Processing ${batches.length} batches (${SCAN_BATCH_SIZE} files per batch)`
-    );
-    log(
-      `   🔄 Analyzing complete file contents for thorough security review\n`
-    );
-
-    // Aggregate findings from all batches
-    const allFindings: Findings = {
-      maliciousCode: [],
-      dependencies: [],
-      networkActivity: [],
-      fileSystemSafety: [],
-      credentialSafety: [],
-    };
-
-    // Track scan timing
-    const scanStartTime = Date.now();
-
-    // Process each batch
-    for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
-      const batch = batches[batchIndex];
-      const batchNum = batchIndex + 1;
-
-      log(
-        `   📋 Batch ${batchNum}/${batches.length}: Preparing ${batch.length} files for analysis...`
-      );
-
-      // Build prompt for this batch
-      const batchFilesDetails = batch
-        .map((path) => {
-          const content = repoData.scannedFiles[path];
-          if (!content) return `${path}: [Could not read]`;
-          if (content.startsWith("[Skipped")) return `${path}: ${content}`;
-
-          return `\n=== ${path} ===\n${content}\n`;
-        })
-        .join("\n");
-
-      const prompt = `Analyze these ${batch.length} files from ${repoData.repoMetadata.owner}/${repoData.repoMetadata.name} for security threats TO CONTRIBUTORS:
+    return `Analyze these ${batch.length} files from ${repoData.repoMetadata.owner}/${repoData.repoMetadata.name} for security threats TO CONTRIBUTORS:
 
 ${batchFilesDetails}
 
@@ -414,201 +392,230 @@ Return JSON in this exact format:
     "credentialSafety": [ /* array of finding objects */ ]
   }
 }`;
+  }
 
-      log(`      🤖 Gemini analyzing files:`);
-      batch.forEach((file, idx) => {
-        log(`         🔍 ${idx + 1}. ${file}`);
-      });
-      log(`      ⏳ Waiting for Gemini response...`);
+  /**
+   * Create the JSON schema for risk detection response
+   */
+  private createRiskDetectionSchema(): any {
+    const findingSchema = {
+      type: SchemaType.OBJECT,
+      properties: {
+        item: { type: SchemaType.STRING },
+        location: { type: SchemaType.STRING },
+        issue: { type: SchemaType.STRING },
+        severity: { type: SchemaType.STRING },
+        codeSnippet: { type: SchemaType.STRING },
+        batchId: { type: SchemaType.NUMBER },
+      },
+      required: [
+        "item",
+        "location",
+        "issue",
+        "severity",
+        "codeSnippet",
+        "batchId",
+      ],
+    };
 
-      const batchStartTime = Date.now();
+    const dependencyFindingSchema = {
+      ...findingSchema,
+      properties: {
+        ...findingSchema.properties,
+        dependencyUrl: { type: SchemaType.STRING },
+      },
+    };
 
-      try {
-        const result = await this.geminiService.callGeminiJSON(prompt, {
-          temperature: GEMINI_RISK_DETECTION_TEMPERATURE,
-          thinkingBudget: GEMINI_RISK_DETECTION_THINKING_BUDGET,
-          maxTokens: GEMINI_MAX_OUTPUT_TOKENS,
-          responseSchema: {
-            type: SchemaType.OBJECT,
-            properties: {
-              findings: {
-                type: SchemaType.OBJECT,
-                properties: {
-                  maliciousCode: {
-                    type: SchemaType.ARRAY,
-                    items: {
-                      type: SchemaType.OBJECT,
-                      properties: {
-                        item: { type: SchemaType.STRING },
-                        location: { type: SchemaType.STRING },
-                        issue: { type: SchemaType.STRING },
-                        severity: { type: SchemaType.STRING },
-                        codeSnippet: { type: SchemaType.STRING },
-                        batchId: { type: SchemaType.NUMBER },
-                      },
-                      required: [
-                        "item",
-                        "location",
-                        "issue",
-                        "severity",
-                        "codeSnippet",
-                        "batchId",
-                      ],
-                    },
-                  },
-                  dependencies: {
-                    type: SchemaType.ARRAY,
-                    items: {
-                      type: SchemaType.OBJECT,
-                      properties: {
-                        item: { type: SchemaType.STRING },
-                        location: { type: SchemaType.STRING },
-                        issue: { type: SchemaType.STRING },
-                        severity: { type: SchemaType.STRING },
-                        codeSnippet: { type: SchemaType.STRING },
-                        batchId: { type: SchemaType.NUMBER },
-                        dependencyUrl: { type: SchemaType.STRING },
-                      },
-                      required: [
-                        "item",
-                        "location",
-                        "issue",
-                        "severity",
-                        "codeSnippet",
-                        "batchId",
-                      ],
-                    },
-                  },
-                  networkActivity: {
-                    type: SchemaType.ARRAY,
-                    items: {
-                      type: SchemaType.OBJECT,
-                      properties: {
-                        item: { type: SchemaType.STRING },
-                        location: { type: SchemaType.STRING },
-                        issue: { type: SchemaType.STRING },
-                        severity: { type: SchemaType.STRING },
-                        codeSnippet: { type: SchemaType.STRING },
-                        batchId: { type: SchemaType.NUMBER },
-                      },
-                      required: [
-                        "item",
-                        "location",
-                        "issue",
-                        "severity",
-                        "codeSnippet",
-                        "batchId",
-                      ],
-                    },
-                  },
-                  fileSystemSafety: {
-                    type: SchemaType.ARRAY,
-                    items: {
-                      type: SchemaType.OBJECT,
-                      properties: {
-                        item: { type: SchemaType.STRING },
-                        location: { type: SchemaType.STRING },
-                        issue: { type: SchemaType.STRING },
-                        severity: { type: SchemaType.STRING },
-                        codeSnippet: { type: SchemaType.STRING },
-                        batchId: { type: SchemaType.NUMBER },
-                      },
-                      required: [
-                        "item",
-                        "location",
-                        "issue",
-                        "severity",
-                        "codeSnippet",
-                        "batchId",
-                      ],
-                    },
-                  },
-                  credentialSafety: {
-                    type: SchemaType.ARRAY,
-                    items: {
-                      type: SchemaType.OBJECT,
-                      properties: {
-                        item: { type: SchemaType.STRING },
-                        location: { type: SchemaType.STRING },
-                        issue: { type: SchemaType.STRING },
-                        severity: { type: SchemaType.STRING },
-                        codeSnippet: { type: SchemaType.STRING },
-                        batchId: { type: SchemaType.NUMBER },
-                      },
-                      required: [
-                        "item",
-                        "location",
-                        "issue",
-                        "severity",
-                        "codeSnippet",
-                        "batchId",
-                      ],
-                    },
-                  },
-                },
-                required: [
-                  "maliciousCode",
-                  "dependencies",
-                  "networkActivity",
-                  "fileSystemSafety",
-                  "credentialSafety",
-                ],
-              },
+    return {
+      type: SchemaType.OBJECT,
+      properties: {
+        findings: {
+          type: SchemaType.OBJECT,
+          properties: {
+            maliciousCode: {
+              type: SchemaType.ARRAY,
+              items: findingSchema,
             },
-            required: ["findings"],
+            dependencies: {
+              type: SchemaType.ARRAY,
+              items: dependencyFindingSchema,
+            },
+            networkActivity: {
+              type: SchemaType.ARRAY,
+              items: findingSchema,
+            },
+            fileSystemSafety: {
+              type: SchemaType.ARRAY,
+              items: findingSchema,
+            },
+            credentialSafety: {
+              type: SchemaType.ARRAY,
+              items: findingSchema,
+            },
           },
-        });
+          required: [
+            "maliciousCode",
+            "dependencies",
+            "networkActivity",
+            "fileSystemSafety",
+            "credentialSafety",
+          ],
+        },
+      },
+      required: ["findings"],
+    };
+  }
 
-        // Merge findings from this batch
-        const findings = result.findings || result;
+  /**
+   * Merge findings from a batch into the aggregated findings
+   */
+  private mergeFindings(allFindings: Findings, batchFindings: any): void {
+    const findings = batchFindings.findings || batchFindings;
 
-        // Log the full JSON response from this batch
-        log(`      📋 Batch ${batchNum} JSON response:`);
-        log(`${JSON.stringify(result, null, 2)}\n`);
+    if (findings.maliciousCode && Array.isArray(findings.maliciousCode)) {
+      allFindings.maliciousCode.push(...findings.maliciousCode);
+    }
+    if (findings.dependencies && Array.isArray(findings.dependencies)) {
+      allFindings.dependencies.push(...findings.dependencies);
+    }
+    if (findings.networkActivity && Array.isArray(findings.networkActivity)) {
+      allFindings.networkActivity.push(...findings.networkActivity);
+    }
+    if (
+      findings.fileSystemSafety &&
+      Array.isArray(findings.fileSystemSafety)
+    ) {
+      allFindings.fileSystemSafety.push(...findings.fileSystemSafety);
+    }
+    if (findings.credentialSafety && Array.isArray(findings.credentialSafety)) {
+      allFindings.credentialSafety.push(...findings.credentialSafety);
+    }
+  }
 
-        if (findings.maliciousCode && Array.isArray(findings.maliciousCode)) {
-          allFindings.maliciousCode.push(...findings.maliciousCode);
-        }
-        if (findings.dependencies && Array.isArray(findings.dependencies)) {
-          allFindings.dependencies.push(...findings.dependencies);
-        }
-        if (
-          findings.networkActivity &&
-          Array.isArray(findings.networkActivity)
-        ) {
-          allFindings.networkActivity.push(...findings.networkActivity);
-        }
-        if (
-          findings.fileSystemSafety &&
-          Array.isArray(findings.fileSystemSafety)
-        ) {
-          allFindings.fileSystemSafety.push(...findings.fileSystemSafety);
-        }
-        if (
-          findings.credentialSafety &&
-          Array.isArray(findings.credentialSafety)
-        ) {
-          allFindings.credentialSafety.push(...findings.credentialSafety);
-        }
+  /**
+   * Process a single batch of files for risk detection
+   */
+  private async processBatch(
+    batch: string[],
+    batchNum: number,
+    totalBatches: number,
+    repoData: any,
+    scanStartTime: number,
+    log: (msg: string) => void
+  ): Promise<any | null> {
+    log(
+      `   📋 Batch ${batchNum}/${totalBatches}: Preparing ${batch.length} files for analysis...`
+    );
 
-        // Calculate timing
-        const batchDuration = ((Date.now() - batchStartTime) / 1000).toFixed(2);
-        const scanDuration = ((Date.now() - scanStartTime) / 1000).toFixed(2);
+    const prompt = this.buildRiskDetectionPrompt(batch, batchNum, repoData);
 
-        log(`      ✅ Gemini analysis complete for batch ${batchNum}`);
-        log(
-          `      ⏱️  Batch duration: ${batchDuration}s | Scan duration: ${scanDuration}s\n`
-        );
-      } catch (error: any) {
-        // Calculate timing even on error
-        const batchDuration = ((Date.now() - batchStartTime) / 1000).toFixed(2);
-        const scanDuration = ((Date.now() - scanStartTime) / 1000).toFixed(2);
+    log(`      🤖 Gemini analyzing files:`);
+    batch.forEach((file, idx) => {
+      log(`         🔍 ${idx + 1}. ${file}`);
+    });
+    log(`      ⏳ Waiting for Gemini response...`);
 
-        log(`      ❌ Batch ${batchNum} failed: ${error.message}`);
-        log(
-          `      ⏱️  Batch duration: ${batchDuration}s | Scan duration: ${scanDuration}s\n`
-        );
-        // Continue with other batches even if one fails
+    const batchStartTime = Date.now();
+
+    try {
+      const result = await this.geminiService.callGeminiJSON(prompt, {
+        temperature: GEMINI_RISK_DETECTION_TEMPERATURE,
+        thinkingBudget: GEMINI_RISK_DETECTION_THINKING_BUDGET,
+        maxTokens: GEMINI_MAX_OUTPUT_TOKENS,
+        responseSchema: this.createRiskDetectionSchema(),
+      });
+
+      // Log the full JSON response from this batch
+      log(`      📋 Batch ${batchNum} JSON response:`);
+      log(`${JSON.stringify(result, null, 2)}\n`);
+
+      // Calculate timing
+      const batchDuration = ((Date.now() - batchStartTime) / 1000).toFixed(2);
+      const scanDuration = ((Date.now() - scanStartTime) / 1000).toFixed(2);
+
+      log(`      ✅ Gemini analysis complete for batch ${batchNum}`);
+      log(
+        `      ⏱️  Batch duration: ${batchDuration}s | Scan duration: ${scanDuration}s\n`
+      );
+
+      return result;
+    } catch (error: any) {
+      // Calculate timing even on error
+      const batchDuration = ((Date.now() - batchStartTime) / 1000).toFixed(2);
+      const scanDuration = ((Date.now() - scanStartTime) / 1000).toFixed(2);
+
+      log(`      ❌ Batch ${batchNum} failed: ${error.message}`);
+      log(
+        `      ⏱️  Batch duration: ${batchDuration}s | Scan duration: ${scanDuration}s\n`
+      );
+      // Continue with other batches even if one fails
+      return null;
+    }
+  }
+
+  /**
+   * Step 2: Detect security risks using Gemini
+   */
+  private async detectRisks(
+    repoData: any,
+    repoUrl: string
+  ): Promise<{ findings: Findings; scanFolderPath: string }> {
+    const log = (msg: string) => console.log(`   ${msg}`);
+
+    log(`🤖 Preparing Risk Detection Analysis with Gemini...`);
+    log(
+      `   📊 ${repoData.filesScanned} security-relevant files from ${repoData.treeSize} total, including:`
+    );
+    log(
+      `   📦 ${repoData.dependencies.production.length} production dependencies`
+    );
+    log(`   🔧 ${repoData.dependencies.dev.length} dev dependencies`);
+    log(`   ⚙️  ${repoData.files.installScripts.length} install scripts`);
+    log(`   💻 ${repoData.files.executableFiles.length} executable files\n`);
+
+    const scannedFilesList = Object.keys(repoData.scannedFiles);
+
+    // Divide files into batches
+    const batches: string[][] = [];
+    for (let i = 0; i < scannedFilesList.length; i += SCAN_BATCH_SIZE) {
+      batches.push(scannedFilesList.slice(i, i + SCAN_BATCH_SIZE));
+    }
+
+    log(
+      `   📦 Processing ${batches.length} batches (${SCAN_BATCH_SIZE} files per batch)`
+    );
+    log(
+      `   🔄 Analyzing complete file contents for thorough security review\n`
+    );
+
+    // Aggregate findings from all batches
+    const allFindings: Findings = {
+      maliciousCode: [],
+      dependencies: [],
+      networkActivity: [],
+      fileSystemSafety: [],
+      credentialSafety: [],
+    };
+
+    // Track scan timing
+    const scanStartTime = Date.now();
+
+    // Process each batch
+    for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+      const batch = batches[batchIndex];
+      const batchNum = batchIndex + 1;
+
+      const result = await this.processBatch(
+        batch,
+        batchNum,
+        batches.length,
+        repoData,
+        scanStartTime,
+        log
+      );
+
+      if (result) {
+        this.mergeFindings(allFindings, result);
       }
 
       // No additional delay needed - GeminiService handles rate limiting automatically
@@ -627,6 +634,68 @@ Return JSON in this exact format:
     log(`   💾 Step 2 findings saved\n`);
 
     return { findings: allFindings, scanFolderPath };
+  }
+
+  /**
+   * Build the safety level analysis prompt
+   */
+  private buildSafetyLevelPrompt(
+    findings: Findings,
+    repoMetadata: any
+  ): string {
+    return `Analyze these security findings and provide safety level and summary FOR CONTRIBUTORS:
+
+Repository: ${repoMetadata.owner}/${repoMetadata.name}
+${repoMetadata.description ? `Description: ${repoMetadata.description}` : ""}
+Language: ${repoMetadata.language || "Unknown"}
+Stars: ${repoMetadata.stars || 0}
+
+Findings:
+${JSON.stringify(findings, null, 2)}
+
+CONTEXT: These findings represent threats to open source contributors who clone/install/contribute to this repository.
+Only "moderate" or "severe" findings are reported - "low" severity issues are filtered out.
+
+YOUR TASK:
+1. Analyze all findings across all categories (DO NOT filter or remove any findings)
+2. Determine safety level for contributors based on severity
+3. Generate a concise summary (2-3 sentences) explaining the safety assessment
+
+SAFETY LEVEL RULES:
+- "unsafe": Has ANY severe findings - immediate threat to contributors (malware, credential theft, system compromise)
+- "caution": Has ONLY moderate findings - potential concerns, generally safe but requires contributor awareness
+- "safe": NO moderate or severe findings - completely safe for contributors to clone/install/contribute
+
+SUMMARY GUIDELINES:
+- For safe repositories: State it's safe, mention it's from a reputable source if applicable, note no threats were found, and end with "This repository is likely safe to contribute to."
+- For caution repositories: Briefly mention the types of concerns found, that contributors should be aware, and end with "Exercise caution if contributing to this repository."
+- For unsafe repositories: Clearly state the severe threats found and end with "We strongly advise against contributing to this repository."
+
+Return JSON in this exact format:
+{
+  "safetyLevel": "safe" | "caution" | "unsafe",
+  "aiSummary": "2-3 sentence summary of the security assessment"
+}`;
+  }
+
+  /**
+   * Create the JSON schema for safety level response
+   */
+  private createSafetyLevelSchema(): any {
+    return {
+      type: SchemaType.OBJECT,
+      properties: {
+        safetyLevel: {
+          type: SchemaType.STRING,
+          description: "Overall safety level: safe, caution, or unsafe",
+        },
+        aiSummary: {
+          type: SchemaType.STRING,
+          description: "2-3 sentence summary of the security assessment",
+        },
+      },
+      required: ["safetyLevel", "aiSummary"],
+    };
   }
 
   /**
@@ -662,39 +731,7 @@ Return JSON in this exact format:
       `   📋 Evaluating ${totalFindings} total findings across ${categories.length} categories`
     );
 
-    const prompt = `Analyze these security findings and provide safety level and summary FOR CONTRIBUTORS:
-
-Repository: ${repoMetadata.owner}/${repoMetadata.name}
-${repoMetadata.description ? `Description: ${repoMetadata.description}` : ""}
-Language: ${repoMetadata.language || "Unknown"}
-Stars: ${repoMetadata.stars || 0}
-
-Findings:
-${JSON.stringify(findings, null, 2)}
-
-CONTEXT: These findings represent threats to open source contributors who clone/install/contribute to this repository.
-Only "moderate" or "severe" findings are reported - "low" severity issues are filtered out.
-
-YOUR TASK:
-1. Analyze all findings across all categories (DO NOT filter or remove any findings)
-2. Determine safety level for contributors based on severity
-3. Generate a concise summary (2-3 sentences) explaining the safety assessment
-
-SAFETY LEVEL RULES:
-- "unsafe": Has ANY severe findings - immediate threat to contributors (malware, credential theft, system compromise)
-- "caution": Has ONLY moderate findings - potential concerns, generally safe but requires contributor awareness
-- "safe": NO moderate or severe findings - completely safe for contributors to clone/install/contribute
-
-SUMMARY GUIDELINES:
-- For safe repositories: State it's safe, mention it's from a reputable source if applicable, note no threats were found, and end with "This repository is likely safe to contribute to."
-- For caution repositories: Briefly mention the types of concerns found, that contributors should be aware, and end with "Exercise caution if contributing to this repository."
-- For unsafe repositories: Clearly state the severe threats found and end with "We strongly advise against contributing to this repository."
-
-Return JSON in this exact format:
-{
-  "safetyLevel": "safe" | "caution" | "unsafe",
-  "aiSummary": "2-3 sentence summary of the security assessment"
-}`;
+    const prompt = this.buildSafetyLevelPrompt(findings, repoMetadata);
 
     log(`   ⏳ Waiting for Gemini response...`);
     const result = await this.geminiService.callGeminiJSON<{
@@ -703,20 +740,7 @@ Return JSON in this exact format:
     }>(prompt, {
       temperature: GEMINI_SAFETY_LEVEL_TEMPERATURE,
       maxTokens: GEMINI_SAFETY_LEVEL_MAX_TOKENS,
-      responseSchema: {
-        type: SchemaType.OBJECT,
-        properties: {
-          safetyLevel: {
-            type: SchemaType.STRING,
-            description: "Overall safety level: safe, caution, or unsafe",
-          },
-          aiSummary: {
-            type: SchemaType.STRING,
-            description: "2-3 sentence summary of the security assessment",
-          },
-        },
-        required: ["safetyLevel", "aiSummary"],
-      },
+      responseSchema: this.createSafetyLevelSchema(),
     });
 
     log(`   ✅ Safety level determined: ${result.safetyLevel.toUpperCase()}`);

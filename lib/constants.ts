@@ -21,7 +21,7 @@ export const SECONDS_PER_MINUTE = 60;
 // ============================================================================
 
 /** Default Gemini model to use for scans */
-export const DEFAULT_GEMINI_MODEL = "gemini-2.5-pro";
+export const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
 
 /** Minimum interval between Gemini API requests (6 seconds = 10 RPM) */
 export const GEMINI_MIN_REQUEST_INTERVAL_MS = 6000;

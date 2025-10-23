@@ -4,15 +4,22 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { ZodError } from "zod";
 import { GeminiScanWorkflow } from "@/lib/ai/gemini/scan-workflow";
 import { auth0 } from "@/lib/auth0";
 import { insertScannedRepo } from "@/lib/database/snowflake";
+import { DEFAULT_GEMINI_MODEL } from "@/lib/constants";
 import {
   mapSafetyLevelToScore,
   parseGitHubUrl,
   createApiError,
   logError,
 } from "@/lib/utils";
+import {
+  ScanRequestSchema,
+  validateAndSanitize,
+  createValidationError,
+} from "@/lib/validation";
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,16 +32,40 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Parse request body
-    const body = await request.json();
-    const { repoUrl } = body;
-
-    if (!repoUrl) {
+    // Validate user session has required fields
+    if (!session.user.email && !session.user.name) {
       return NextResponse.json(
-        { error: "Repository URL is required" },
+        { error: "Invalid user session - missing user identifier" },
         { status: 400 }
       );
     }
+
+    // Parse and validate request body
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch (error) {
+      return NextResponse.json(
+        { error: "Invalid JSON in request body" },
+        { status: 400 }
+      );
+    }
+
+    // Validate and sanitize input
+    let validatedData: { repoUrl: string };
+    try {
+      validatedData = validateAndSanitize(ScanRequestSchema, body);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return NextResponse.json(createValidationError(error), { status: 400 });
+      }
+      return NextResponse.json(
+        { error: "Invalid request data" },
+        { status: 400 }
+      );
+    }
+
+    const { repoUrl } = validatedData;
 
     // Extract repo owner and name from URL
     let repoOwner: string;
@@ -68,14 +99,17 @@ export async function POST(request: NextRequest) {
     const workflow = new GeminiScanWorkflow({
       geminiApiKey,
       githubToken,
-      geminiModel: "gemini-2.5-flash-lite", // Faster model for quicker scans
+      geminiModel: DEFAULT_GEMINI_MODEL,
     });
 
     // Execute scan
     console.log(`[API] Starting Gemini-based scan for: ${repoUrl}`);
     const result = await workflow.scanRepository(repoUrl);
     console.log(`[API] Scan completed: ${result.safetyLevel}`);
-    console.log(`[API] Repo metadata:`, JSON.stringify(result.repoMetadata, null, 2));
+    console.log(
+      `[API] Repo metadata:`,
+      JSON.stringify(result.repoMetadata, null, 2)
+    );
 
     // Map safety level from scan result to database format
     const safetyScore = mapSafetyLevelToScore(result.safetyLevel);
@@ -94,7 +128,9 @@ export async function POST(request: NextRequest) {
         findings: result,
         scannedBy: session.user.email || session.user.name || "unknown",
       });
-      console.log(`[API] Scan results saved to Snowflake for ${repoOwner}/${cleanRepoName}`);
+      console.log(
+        `[API] Scan results saved to Snowflake for ${repoOwner}/${cleanRepoName}`
+      );
     } catch (snowflakeError) {
       logError("[API]", "Failed to save to Snowflake", snowflakeError);
       // Continue even if Snowflake save fails - don't fail the entire request

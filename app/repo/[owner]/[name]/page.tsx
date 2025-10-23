@@ -8,7 +8,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { AlertTriangle, CheckCircle2, Info } from "lucide-react";
 import { auth0 } from "@/lib/auth0";
 import { getRepoByOwnerAndName } from "@/lib/database/snowflake";
 import { RescanButton } from "./rescan-button";
@@ -16,6 +15,7 @@ import { ContributorNotes } from "./contributor-notes";
 import { formatTimestamp } from "@/lib/utils";
 import { PageLayout, PageContainer } from "@/components/page-layout";
 import { BackLink } from "@/components/back-link";
+import { SecurityCategory } from "./security-findings";
 
 interface PageProps {
   params: Promise<{
@@ -154,31 +154,39 @@ export default async function RepoDetailPage({ params }: PageProps) {
   // Parse the findings JSON
   const findings = repoData.FINDINGS || mockRepoDetails;
 
-  const getIcon = (type: string) => {
-    switch (type) {
-      case "success":
-        return <CheckCircle2 className="h-5 w-5 text-success" />;
-      case "warning":
-        return <AlertTriangle className="h-5 w-5 text-warning" />;
-      case "danger":
-        return <AlertTriangle className="h-5 w-5 text-danger" />;
-      default:
-        return <Info className="h-5 w-5 text-primary" />;
-    }
-  };
-
-  const getBorderColor = (type: string) => {
-    switch (type) {
-      case "success":
-        return "border-l-success";
-      case "warning":
-        return "border-l-warning";
-      case "danger":
-        return "border-l-danger";
-      default:
-        return "border-l-primary";
-    }
-  };
+  // Define security categories
+  const securityCategories = [
+    {
+      key: "maliciousCode",
+      title: "No Malicious Code Detected",
+      description:
+        "Code analysis found no obfuscated code, crypto miners, keyloggers, or backdoor patterns.",
+    },
+    {
+      key: "dependencies",
+      title: "Dependencies Verified",
+      description:
+        "All dependencies are from trusted sources with no known vulnerabilities or suspicious install scripts.",
+    },
+    {
+      key: "networkActivity",
+      title: "No Suspicious Network Activity",
+      description:
+        "No unauthorized network calls, data exfiltration attempts, or connections to unknown domains detected.",
+    },
+    {
+      key: "fileSystemSafety",
+      title: "File System Operations Safe",
+      description:
+        "No unsafe file operations, suspicious file access patterns, or unauthorized file modifications detected.",
+    },
+    {
+      key: "credentialSafety",
+      title: "Credential Safety Verified",
+      description:
+        "No credential harvesting, exposed secrets, or authentication vulnerabilities detected.",
+    },
+  ];
 
   return (
     <PageLayout>
@@ -228,149 +236,15 @@ export default async function RepoDetailPage({ params }: PageProps) {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {/* Display all 5 security categories */}
-                {[
-                  {
-                    key: "maliciousCode",
-                    title: "No Malicious Code Detected",
-                    description:
-                      "Code analysis found no obfuscated code, crypto miners, keyloggers, or backdoor patterns.",
-                  },
-                  {
-                    key: "dependencies",
-                    title: "Dependencies Verified",
-                    description:
-                      "All dependencies are from trusted sources with no known vulnerabilities or suspicious install scripts.",
-                  },
-                  {
-                    key: "networkActivity",
-                    title: "No Suspicious Network Activity",
-                    description:
-                      "No unauthorized network calls, data exfiltration attempts, or connections to unknown domains detected.",
-                  },
-                  {
-                    key: "fileSystemSafety",
-                    title: "File System Operations Safe",
-                    description:
-                      "No unsafe file operations, suspicious file access patterns, or unauthorized file modifications detected.",
-                  },
-                  {
-                    key: "credentialSafety",
-                    title: "Credential Safety Verified",
-                    description:
-                      "No credential harvesting, exposed secrets, or authentication vulnerabilities detected.",
-                  },
-                ].map((category) => {
-                  const categoryFindings =
-                    findings.findings?.[category.key] || [];
-                  const findingsCount = categoryFindings.length;
-                  const hasFindings = findingsCount > 0;
-
-                  // Determine the most severe level in this category
-                  let categorySeverity = "moderate"; // Default to moderate if there are findings
-                  if (hasFindings) {
-                    const hasSevere = categoryFindings.some(
-                      (f: any) => f.severity === "severe"
-                    );
-                    if (hasSevere) categorySeverity = "severe";
-                  }
-
-                  const categoryType =
-                    categorySeverity === "severe" ? "danger" : "warning";
-
-                  const getBadgeColor = (type: string) => {
-                    return type === "danger"
-                      ? "bg-danger/20 text-danger"
-                      : "bg-warning/20 text-warning";
-                  };
-
-                  return (
-                    <div key={category.key}>
-                      {hasFindings ? (
-                        // Show count and findings if they exist
-                        <div className="space-y-3">
-                          <div
-                            className={`flex gap-3 p-4 rounded-lg border-l-4 bg-muted/30 ${getBorderColor(categoryType)}`}
-                          >
-                            <div className="flex-shrink-0 mt-0.5">
-                              <div
-                                className={`flex items-center justify-center w-6 h-6 rounded-full ${getBadgeColor(categoryType)} font-bold text-sm`}
-                              >
-                                {findingsCount}
-                              </div>
-                            </div>
-                            <div>
-                              <h4 className="font-semibold mb-1">
-                                {category.key === "maliciousCode"
-                                  ? "Malicious Code Issues"
-                                  : category.key === "dependencies"
-                                    ? "Dependency Issues"
-                                    : category.key === "networkActivity"
-                                      ? "Network Activity Issues"
-                                      : category.key === "fileSystemSafety"
-                                        ? "File System Issues"
-                                        : "Credential Safety Issues"}
-                              </h4>
-                              <p className="text-sm text-muted-foreground">
-                                {findingsCount} issue
-                                {findingsCount > 1 ? "s" : ""} detected
-                              </p>
-                            </div>
-                          </div>
-                          {categoryFindings.map(
-                            (finding: any, index: number) => {
-                              const severity = finding.severity || "moderate";
-                              const type =
-                                severity === "severe" ? "danger" : "warning";
-
-                              return (
-                                <div
-                                  key={index}
-                                  className={`flex gap-3 p-4 rounded-lg border-l-4 bg-muted/30 ${getBorderColor(type)} ml-9`}
-                                >
-                                  <div className="flex-shrink-0 mt-0.5">
-                                    {getIcon(type)}
-                                  </div>
-                                  <div>
-                                    <h4 className="font-semibold mb-1">
-                                      {finding.item}
-                                    </h4>
-                                    <p className="text-sm text-muted-foreground mb-1">
-                                      {finding.issue}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">
-                                      Location: {finding.location}
-                                    </p>
-                                    {finding.codeSnippet && (
-                                      <pre className="mt-2 text-xs bg-muted p-2 rounded whitespace-pre-wrap break-words">
-                                        {finding.codeSnippet}
-                                      </pre>
-                                    )}
-                                  </div>
-                                </div>
-                              );
-                            }
-                          )}
-                        </div>
-                      ) : (
-                        // Show success message if no findings
-                        <div className="flex gap-3 p-4 rounded-lg border-l-4 bg-muted/30 border-l-success">
-                          <div className="flex-shrink-0 mt-0.5">
-                            <CheckCircle2 className="h-5 w-5 text-success" />
-                          </div>
-                          <div>
-                            <h4 className="font-semibold mb-1">
-                              {category.title}
-                            </h4>
-                            <p className="text-sm text-muted-foreground">
-                              {category.description}
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                {securityCategories.map((category) => (
+                  <SecurityCategory
+                    key={category.key}
+                    categoryKey={category.key}
+                    title={category.title}
+                    description={category.description}
+                    findings={findings.findings?.[category.key] || []}
+                  />
+                ))}
               </div>
             </CardContent>
           </Card>

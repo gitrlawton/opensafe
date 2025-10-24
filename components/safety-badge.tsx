@@ -1,64 +1,53 @@
 import { cn } from "@/lib/utils";
+import {
+  mapSafetyScoreToUIType,
+  getSeverityBackgroundColor,
+  getSafetyScoreLabel,
+} from "@/lib/ui-helpers";
 
 interface SafetyBadgeProps {
   score: string | number; // Support both "SAFE"/"CAUTION"/"UNSAFE" and numeric scores
   className?: string;
 }
 
-export function SafetyBadge({ score, className }: SafetyBadgeProps): JSX.Element {
-  // Handle string scores from Snowflake
-  if (typeof score === "string") {
-    const scoreUpper = score.toUpperCase();
-    const getColorForString = (): string => {
-      if (scoreUpper === "SAFE")
-        return "bg-success/10 text-success border-success/20";
-      if (scoreUpper === "CAUTION")
-        return "bg-warning/10 text-warning border-warning/20";
-      return "bg-danger/10 text-danger border-danger/20"; // UNSAFE
-    };
+/**
+ * Displays a safety badge with color-coded styling based on safety score
+ * Supports both string-based scores (SAFE/CAUTION/UNSAFE) and legacy numeric scores
+ *
+ * @param score - Safety score (string or number)
+ * @param className - Optional additional CSS classes
+ * @returns Safety badge component
+ *
+ * @example
+ * <SafetyBadge score="SAFE" />
+ * <SafetyBadge score={95} />
+ */
+export function SafetyBadge({
+  score,
+  className,
+}: SafetyBadgeProps): JSX.Element {
+  // Get the UI severity type based on score
+  const uiType =
+    typeof score === "string"
+      ? mapSafetyScoreToUIType(score)
+      : score >= 90
+        ? "success"
+        : score >= 70
+          ? "warning"
+          : "danger";
 
-    const getDisplayLabel = (): string => {
-      if (scoreUpper === "SAFE") return "Safe";
-      if (scoreUpper === "CAUTION") return "Caution";
-      return "Unsafe";
-    };
-
-    return (
-      <div className={cn("inline-flex items-center gap-2", className)}>
-        <span
-          className={cn(
-            "px-2.5 py-1 rounded-md text-xs font-medium border",
-            getColorForString()
-          )}
-        >
-          {getDisplayLabel()}
-        </span>
-      </div>
-    );
-  }
-
-  // Handle numeric scores (legacy format)
-  const getScoreColor = (score: number): string => {
-    if (score >= 90) return "bg-success/10 text-success border-success/20";
-    if (score >= 70) return "bg-warning/10 text-warning border-warning/20";
-    return "bg-danger/10 text-danger border-danger/20";
-  };
-
-  const getScoreLabel = (score: number): string => {
-    if (score >= 90) return "Safe";
-    if (score >= 70) return "Caution";
-    return "Risk";
-  };
+  const colorClasses = getSeverityBackgroundColor(uiType);
+  const label = getSafetyScoreLabel(score);
 
   return (
     <div className={cn("inline-flex items-center gap-2", className)}>
       <span
         className={cn(
           "px-2.5 py-1 rounded-md text-xs font-medium border",
-          getScoreColor(score)
+          colorClasses
         )}
       >
-        {getScoreLabel(score)}
+        {label}
       </span>
     </div>
   );

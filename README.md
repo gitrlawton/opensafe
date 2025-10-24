@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# OpenSafe
 
-## Getting Started
+> Verify before contributing to open source projects
 
-First, run the development server:
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## About
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+OpenSafe protects open source contributors by scanning GitHub repositories for malicious code, backdoors, and dangerous dependencies **before you clone or contribute**. Using AI-powered analysis, OpenSafe helps developers safely identify which open source projects are likely safe to explore and contribute to and which are not.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**[Try OpenSafe Live](#)** _(Add your deployment URL here)_
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Features
 
-## Learn More
+- **Repository Scanning** - Verify safety of repository before cloning or contributing
+- **AI-Powered Threat Detection** - Leverages Google Gemini AI to identify malicious patterns
+- **Malicious Code Detection** - Identifies backdoors, data exfiltration, and harmful scripts
+- **Dangerous Dependency Analysis** - Detects suspicious packages that could compromise your system
+- **Safety Level** - Get an instant contributor safety level (safe, unsafe, caution)
+- **Detailed Threat Reports** - Comprehensive findings showing what could harm you as a contributor
+- **Repository Index** - List of repositories analyzed and when they were last scanned
 
-To learn more about Next.js, take a look at the following resources:
+## How to Use
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. **Visit the App** - Go to the [OpenSafe web application](#) _(Add your deployment URL here)_
+2. **Sign In** - Authenticate with your GitHub account
+3. **Scan Repo** - Navigate to the scan page and enter the URL of any public repository you want to contribute to
+4. **Scan** - Click "Start Scan" to check for threats
+5. **Review Safety Report** - See if it's safe to clone and contribute, or what risks exist
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Tech Stack
 
-## Deploy on Vercel
+Built with the following technologies:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Frontend**: Next.js 15, React, TypeScript, Tailwind CSS
+- **AI/ML**: Google Gemini AI for threat detection
+- **Authentication**: Auth0 with GitHub OAuth
+- **Database**: Snowflake for scalable data storage
+- **Deployment**: Vercel
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Screenshots
+
+_Screenshots coming soon - add images showing the scan interface and security report_
+
+## Contributing
+
+⚠️ **We're currently preparing our contribution guidelines and development environment setup.**
+
+We're excited to welcome contributors soon! In the meantime:
+
+- ⭐ **Star and Watch** this repository to show your interest and be notified when we're ready to accept contributions
+- 💡 **Open an issue** if you have feature ideas or bug reports
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- Built with [Next.js](https://nextjs.org)
+- Powered by [Google Gemini AI](https://ai.google.dev)
+- Authentication by [Auth0](https://auth0.com)
+
+---
+
+**Made with ❤️ for the open source community**

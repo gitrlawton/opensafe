@@ -9,29 +9,31 @@ import { getScannedRepos } from "@/lib/database/snowflake";
 import { formatTimestamp, createApiError, logError } from "@/lib/utils";
 import { MAX_REPOS_FETCH_LIMIT } from "@/lib/constants";
 import {
-  ReposQuerySchema,
+  reposQuerySchema,
   createValidationError,
   sanitizeString,
-} from "@/lib/validation";
+} from "@/lib/validations/api";
 
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     // Parse and validate query parameters
     const searchParams = request.nextUrl.searchParams;
     const queryParams = {
       limit: searchParams.get("limit") || undefined,
       offset: searchParams.get("offset") || undefined,
-      safetyScore: searchParams.get("safetyScore") || undefined,
+      owner: searchParams.get("owner") || undefined,
+      language: searchParams.get("language") || undefined,
     };
 
     let validatedParams: {
       limit?: number;
       offset?: number;
-      safetyScore?: "SAFE" | "CAUTION" | "UNSAFE";
+      owner?: string;
+      language?: string;
     };
 
     try {
-      validatedParams = ReposQuerySchema.parse(queryParams);
+      validatedParams = reposQuerySchema.parse(queryParams);
     } catch (error) {
       if (error instanceof ZodError) {
         return NextResponse.json(createValidationError(error), { status: 400 });
@@ -51,7 +53,7 @@ export async function GET(request: NextRequest) {
     const repos = await getScannedRepos(finalLimit);
 
     // Transform and sanitize Snowflake data to match frontend format
-    const transformedRepos = repos.map((repo: any) => ({
+    const transformedRepos = repos.map((repo) => ({
       id: sanitizeString(
         repo.ID?.toString() || `${repo.REPO_OWNER}-${repo.REPO_NAME}`
       ),

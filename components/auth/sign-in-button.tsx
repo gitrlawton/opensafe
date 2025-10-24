@@ -19,7 +19,7 @@ interface SignInButtonProps {
   } | null;
 }
 
-export function SignInButton({ user }: SignInButtonProps) {
+export function SignInButton({ user }: SignInButtonProps): JSX.Element {
   if (!user) {
     return (
       <Button size="sm" asChild>

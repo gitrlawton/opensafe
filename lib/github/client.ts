@@ -3,19 +3,14 @@
  * Fetches repository data for security scanning
  */
 
-export interface GitHubRepoMetadata {
-  owner: string;
-  name: string;
-  defaultBranch: string;
-  language?: string;
-}
-
-export interface GitHubFile {
-  path: string;
-  content: string;
-  size: number;
-  type: string;
-}
+import type {
+  GitHubRepoMetadata,
+  GitHubFile,
+  FileToScan,
+  ParsedGitHubUrl,
+  GitHubTreeItem,
+  PackageJson,
+} from "@/types/github";
 
 export class GitHubClient {
   private token?: string;
@@ -24,7 +19,7 @@ export class GitHubClient {
     this.token = token;
   }
 
-  private get headers() {
+  private get headers(): Record<string, string> {
     const headers: Record<string, string> = {
       Accept: "application/vnd.github.v3+json",
     };
@@ -39,7 +34,7 @@ export class GitHubClient {
   /**
    * Parse GitHub URL to extract owner and repo name
    */
-  parseRepoUrl(url: string): { owner: string; repo: string } {
+  parseRepoUrl(url: string): ParsedGitHubUrl {
     const match = url.match(/github\.com\/([^\/]+)\/([^\/]+)/);
     if (!match) {
       throw new Error(`Invalid GitHub URL: ${url}`);
@@ -90,7 +85,7 @@ export class GitHubClient {
     repo: string,
     branch: string,
     onProgress?: (message: string) => void
-  ): Promise<any[]> {
+  ): Promise<GitHubTreeItem[]> {
     onProgress?.(`🌳 Fetching repository file tree...`);
 
     const response = await fetch(
@@ -118,7 +113,7 @@ export class GitHubClient {
     repo: string,
     branch: string,
     onProgress?: (message: string) => void
-  ): Promise<any | null> {
+  ): Promise<PackageJson | null> {
     onProgress?.(`📦 Fetching package.json...`);
 
     try {
@@ -190,9 +185,10 @@ export class GitHubClient {
   /**
    * Get install scripts from package.json
    */
-  getInstallScripts(packageJson: any): string[] {
+  getInstallScripts(packageJson: PackageJson | null): string[] {
     if (!packageJson?.scripts) return [];
 
+    const scripts = packageJson.scripts;
     const installScriptKeys = [
       "preinstall",
       "install",
@@ -203,14 +199,14 @@ export class GitHubClient {
     ];
 
     return installScriptKeys
-      .filter((key) => packageJson.scripts[key])
-      .map((key) => `${key}: ${packageJson.scripts[key]}`);
+      .filter((key) => scripts[key])
+      .map((key) => `${key}: ${scripts[key]}`);
   }
 
   /**
    * Find executable files in tree
    */
-  findExecutableFiles(tree: any[]): string[] {
+  findExecutableFiles(tree: GitHubTreeItem[]): string[] {
     const executableExtensions = [
       ".exe",
       ".sh",
@@ -221,19 +217,19 @@ export class GitHubClient {
     ];
 
     return tree
-      .filter((item: any) => {
+      .filter((item: GitHubTreeItem) => {
         if (item.type !== "blob") return false;
         return executableExtensions.some((ext) => item.path.endsWith(ext));
       })
-      .map((item: any) => item.path);
+      .map((item: GitHubTreeItem) => item.path);
   }
 
   /**
    * Find files that should be scanned for security issues
    * Returns all security-relevant files with priority ordering
    */
-  findFilesToScan(tree: any[]): { path: string; priority: number }[] {
-    const files: { path: string; priority: number }[] = [];
+  findFilesToScan(tree: GitHubTreeItem[]): FileToScan[] {
+    const files: FileToScan[] = [];
 
     // Priority 1 (Critical) - Configuration and credential files
     const criticalPatterns = [
@@ -274,11 +270,11 @@ export class GitHubClient {
       /config\.json$/i,
     ];
 
-    tree.forEach((item: any) => {
+    tree.forEach((item: GitHubTreeItem) => {
       if (item.type !== "blob") return;
 
       const path = item.path;
-      let priority = 5; // Default low priority
+      let priority: 1 | 2 | 3 | 4 | 5 = 5; // Default low priority
 
       if (criticalPatterns.some((pattern) => pattern.test(path))) {
         priority = 1;
@@ -308,7 +304,7 @@ export class GitHubClient {
     owner: string,
     repo: string,
     branch: string,
-    files: { path: string; priority: number }[],
+    files: FileToScan[],
     onProgress?: (message: string, current: number, total: number) => void
   ): Promise<Map<string, string | null>> {
     const scannedFiles = new Map<string, string | null>();

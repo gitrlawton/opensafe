@@ -7,7 +7,7 @@ interface ContributorNotesProps {
   isLoggedIn: boolean
 }
 
-export function ContributorNotes({ isLoggedIn }: ContributorNotesProps) {
+export function ContributorNotes({ isLoggedIn }: ContributorNotesProps): JSX.Element {
   return (
     <div className="opacity-50 pointer-events-none">
       {isLoggedIn ? (

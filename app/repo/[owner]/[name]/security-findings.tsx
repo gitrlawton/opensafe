@@ -1,12 +1,5 @@
 import { CheckCircle2, AlertTriangle, Info } from "lucide-react";
-
-interface Finding {
-  item: string;
-  location: string;
-  issue: string;
-  severity?: "low" | "moderate" | "severe";
-  codeSnippet?: string;
-}
+import type { Finding } from "@/types/scan";
 
 interface SecurityCategoryProps {
   categoryKey: string;
@@ -18,7 +11,7 @@ interface SecurityCategoryProps {
 /**
  * Get the icon component for a finding type
  */
-function getIcon(type: string) {
+function getIcon(type: string): JSX.Element {
   switch (type) {
     case "success":
       return <CheckCircle2 className="h-5 w-5 text-success" />;
@@ -34,7 +27,7 @@ function getIcon(type: string) {
 /**
  * Get the border color class for a finding type
  */
-function getBorderColor(type: string) {
+function getBorderColor(type: string): string {
   switch (type) {
     case "success":
       return "border-l-success";
@@ -50,7 +43,7 @@ function getBorderColor(type: string) {
 /**
  * Get the badge color class for a finding type
  */
-function getBadgeColor(type: string) {
+function getBadgeColor(type: string): string {
   return type === "danger"
     ? "bg-danger/20 text-danger"
     : "bg-warning/20 text-warning";
@@ -79,7 +72,7 @@ function getCategoryTitle(categoryKey: string): string {
 /**
  * Render a single finding card
  */
-function FindingCard({ finding, type }: { finding: Finding; type: string }) {
+function FindingCard({ finding, type }: { finding: Finding; type: string }): JSX.Element {
   return (
     <div
       className={`flex gap-3 p-4 rounded-lg border-l-4 bg-muted/30 ${getBorderColor(type)} ml-9`}
@@ -110,7 +103,7 @@ function CategoryWithFindings({
 }: {
   categoryKey: string;
   findings: Finding[];
-}) {
+}): JSX.Element {
   const findingsCount = findings.length;
 
   // Determine the most severe level in this category
@@ -155,7 +148,7 @@ function CategoryWithFindings({
 /**
  * Render a category with no findings (success state)
  */
-function CategorySuccess({ title, description }: SecurityCategoryProps) {
+function CategorySuccess({ title, description }: SecurityCategoryProps): JSX.Element {
   return (
     <div className="flex gap-3 p-4 rounded-lg border-l-4 bg-muted/30 border-l-success">
       <div className="flex-shrink-0 mt-0.5">
@@ -177,7 +170,7 @@ export function SecurityCategory({
   title,
   description,
   findings,
-}: SecurityCategoryProps) {
+}: SecurityCategoryProps): JSX.Element {
   const hasFindings = findings.length > 0;
 
   if (hasFindings) {

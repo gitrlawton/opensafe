@@ -5,11 +5,11 @@ interface SafetyBadgeProps {
   className?: string;
 }
 
-export function SafetyBadge({ score, className }: SafetyBadgeProps) {
+export function SafetyBadge({ score, className }: SafetyBadgeProps): JSX.Element {
   // Handle string scores from Snowflake
   if (typeof score === "string") {
     const scoreUpper = score.toUpperCase();
-    const getColorForString = () => {
+    const getColorForString = (): string => {
       if (scoreUpper === "SAFE")
         return "bg-success/10 text-success border-success/20";
       if (scoreUpper === "CAUTION")
@@ -17,7 +17,7 @@ export function SafetyBadge({ score, className }: SafetyBadgeProps) {
       return "bg-danger/10 text-danger border-danger/20"; // UNSAFE
     };
 
-    const getDisplayLabel = () => {
+    const getDisplayLabel = (): string => {
       if (scoreUpper === "SAFE") return "Safe";
       if (scoreUpper === "CAUTION") return "Caution";
       return "Unsafe";
@@ -38,13 +38,13 @@ export function SafetyBadge({ score, className }: SafetyBadgeProps) {
   }
 
   // Handle numeric scores (legacy format)
-  const getScoreColor = (score: number) => {
+  const getScoreColor = (score: number): string => {
     if (score >= 90) return "bg-success/10 text-success border-success/20";
     if (score >= 70) return "bg-warning/10 text-warning border-warning/20";
     return "bg-danger/10 text-danger border-danger/20";
   };
 
-  const getScoreLabel = (score: number) => {
+  const getScoreLabel = (score: number): string => {
     if (score >= 90) return "Safe";
     if (score >= 70) return "Caution";
     return "Risk";

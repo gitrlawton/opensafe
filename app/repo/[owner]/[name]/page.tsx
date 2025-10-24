@@ -16,13 +16,13 @@ import { formatTimestamp } from "@/lib/utils";
 import { PageLayout, PageContainer } from "@/components/page-layout";
 import { BackLink } from "@/components/back-link";
 import { SecurityCategory } from "./security-findings";
+import type { PageProps } from "@/types/api";
+import type { Findings } from "@/types/scan";
 
-interface PageProps {
-  params: Promise<{
-    owner: string;
-    name: string;
-  }>;
-}
+type RepoPageProps = PageProps<{
+  owner: string;
+  name: string;
+}>;
 
 // Mock data - in real app, fetch based on params
 const mockRepoDetails = {
@@ -67,7 +67,7 @@ const mockRepoDetails = {
   ],
 };
 
-export default async function RepoDetailPage({ params }: PageProps) {
+export default async function RepoDetailPage({ params }: RepoPageProps): Promise<JSX.Element> {
   const { owner, name } = await params;
 
   // Get authentication status
@@ -80,12 +80,18 @@ export default async function RepoDetailPage({ params }: PageProps) {
   // Check for mock repo example
   if (!repoData && owner === "test-user" && name === "example-repo") {
     repoData = {
+      ID: "mock-1",
       REPO_OWNER: "test-user",
       REPO_NAME: "example-repo",
       LANGUAGE: "JavaScript",
       SAFETY_SCORE: "CAUTION",
       SCANNED_AT: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
+      SCANNED_BY: "demo-user",
       FINDINGS: {
+        repoUrl: "https://github.com/test-user/example-repo",
+        safetyLevel: "caution",
+        scannedAt: new Date(Date.now() - 3600000).toISOString(),
+        validated: true,
         aiSummary:
           "This repository has some security concerns that should be addressed. Two dependency-related issues were found along with one instance of potentially malicious code. Network activity, file system operations, and credential handling appear to be safe.",
         findings: {
@@ -242,7 +248,7 @@ export default async function RepoDetailPage({ params }: PageProps) {
                     categoryKey={category.key}
                     title={category.title}
                     description={category.description}
-                    findings={findings.findings?.[category.key] || []}
+                    findings={findings.findings?.[category.key as keyof Findings] || []}
                   />
                 ))}
               </div>

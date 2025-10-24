@@ -14,14 +14,10 @@ import {
   GEMINI_RETRY_WAIT_MS,
   MS_PER_MINUTE,
 } from "@/lib/constants";
+import type { GeminiServiceConfig, GeminiSchema } from "@/types/scan";
 
 // Re-export SchemaType for use in workflow
 export { SchemaType };
-
-export interface GeminiServiceConfig {
-  apiKey: string;
-  model?: string; // Default: gemini-2.5-flash
-}
 
 export class GeminiService {
   private genAI: GoogleGenerativeAI;
@@ -63,7 +59,7 @@ export class GeminiService {
       maxTokens?: number;
       thinkingBudget?: number; // Set to 0 to disable, higher values for deeper reasoning
       maxRetries?: number;
-      responseSchema?: any; // JSON schema for structured output
+      responseSchema?: GeminiSchema; // JSON schema for structured output
     }
   ): Promise<string> {
     const maxRetries = options?.maxRetries ?? GEMINI_MAX_RETRIES;
@@ -189,7 +185,7 @@ export class GeminiService {
       temperature?: number;
       maxTokens?: number;
       thinkingBudget?: number; // Limit thinking tokens to reserve space for output
-      responseSchema?: any; // JSON schema for structured output
+      responseSchema?: GeminiSchema; // JSON schema for structured output
     }
   ): Promise<T> {
     const response = await this.callGemini(prompt, options);

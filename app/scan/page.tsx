@@ -22,7 +22,7 @@ import { PageLayout, PageContainer } from "@/components/page-layout";
 import { PageHeader } from "@/components/page-header";
 import { ErrorMessage, SuccessMessage } from "@/components/ui-states";
 
-function ScanPage() {
+function ScanPage(): JSX.Element {
   const router = useRouter();
   const [repoUrl, setRepoUrl] = useState("");
   const [isScanning, setIsScanning] = useState(false);
@@ -45,7 +45,7 @@ function ScanPage() {
     return () => clearInterval(interval);
   }, [isScanning]);
 
-  const handleScan = async (e: React.FormEvent) => {
+  const handleScan = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setIsScanning(true);
     setScanComplete(false);

@@ -14,7 +14,7 @@ export function PageHeader({
   title,
   description,
   className,
-}: PageHeaderProps) {
+}: PageHeaderProps): JSX.Element {
   return (
     <div className={cn("mb-8", className)}>
       <h1 className="text-4xl font-bold mb-2 text-balance">{title}</h1>

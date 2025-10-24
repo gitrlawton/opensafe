@@ -10,11 +10,11 @@ interface RescanButtonProps {
   name: string
 }
 
-export function RescanButton({ owner, name }: RescanButtonProps) {
+export function RescanButton({ owner, name }: RescanButtonProps): JSX.Element {
   const router = useRouter()
   const [isScanning, setIsScanning] = useState(false)
 
-  const handleRescan = async () => {
+  const handleRescan = async (): Promise<void> => {
     setIsScanning(true)
 
     try {

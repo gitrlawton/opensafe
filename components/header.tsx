@@ -2,7 +2,7 @@ import Link from "next/link";
 import { auth0 } from "@/lib/auth0";
 import { SignInButton } from "@/components/auth/sign-in-button";
 
-export async function Header() {
+export async function Header(): Promise<JSX.Element> {
   let session = null;
 
   try {

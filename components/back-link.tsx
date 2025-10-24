@@ -12,7 +12,7 @@ interface BackLinkProps {
   className?: string;
 }
 
-export function BackLink({ href, label = "Back", className }: BackLinkProps) {
+export function BackLink({ href, label = "Back", className }: BackLinkProps): JSX.Element {
   return (
     <Link
       href={href}

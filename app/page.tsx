@@ -17,16 +17,7 @@ import { PageLayout, PageContainer } from "@/components/page-layout";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/ui-states";
 import { Skeleton } from "@/components/ui/skeleton";
-
-export interface ScannedRepo {
-  id: string;
-  name: string;
-  owner: string;
-  language: string;
-  safetyScore: string | number; // Support both "SAFE"/"CAUTION"/"UNSAFE" and numeric scores
-  lastScanned: string;
-  scannedBy?: string;
-}
+import type { ScannedRepo } from "@/types/api";
 
 // Mock data
 const mockRepos = [
@@ -104,14 +95,14 @@ const mockRepos = [
   },
 ];
 
-export default function HomePage() {
+export default function HomePage(): JSX.Element {
   const [searchQuery, setSearchQuery] = useState("");
   const [allRepos, setAllRepos] = useState<ScannedRepo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchRepos = async () => {
+    const fetchRepos = async (): Promise<void> => {
       try {
         setIsLoading(true);
         const response = await fetch("/api/repos");
@@ -127,7 +118,7 @@ export default function HomePage() {
         setError(null);
       } catch (err: any) {
         console.error("Failed to fetch repos:", err);
-        setError(err.message);
+        setError(err.message || "Failed to fetch repositories");
         // Fall back to just mock data if Snowflake fails
         setAllRepos(mockRepos);
       } finally {

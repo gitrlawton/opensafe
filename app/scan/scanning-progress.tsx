@@ -19,7 +19,7 @@ interface ScanningProgressProps {
   currentStep: number;
 }
 
-export function ScanningProgress({ currentStep }: ScanningProgressProps) {
+export function ScanningProgress({ currentStep }: ScanningProgressProps): JSX.Element {
   return (
     <div className="flex items-start gap-3 p-4 rounded-lg bg-muted/50 border border-border">
       <Brain className="h-5 w-5 text-primary mt-0.5 flex-shrink-0 animate-pulse" />

@@ -16,12 +16,12 @@ import {
   logError,
 } from "@/lib/utils";
 import {
-  ScanRequestSchema,
+  scanRequestSchema,
   validateAndSanitize,
   createValidationError,
-} from "@/lib/validation";
+} from "@/lib/validations/api";
 
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     // Check authentication
     const session = await auth0.getSession();
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     // Validate and sanitize input
     let validatedData: { repoUrl: string };
     try {
-      validatedData = validateAndSanitize(ScanRequestSchema, body);
+      validatedData = validateAndSanitize(scanRequestSchema, body);
     } catch (error) {
       if (error instanceof ZodError) {
         return NextResponse.json(createValidationError(error), { status: 400 });
@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Optional: GET endpoint to check API status
-export async function GET() {
+export async function GET(): Promise<NextResponse> {
   return NextResponse.json(
     {
       status: "online",

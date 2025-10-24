@@ -15,41 +15,16 @@ import {
   GEMINI_SAFETY_LEVEL_TEMPERATURE,
   GEMINI_SAFETY_LEVEL_MAX_TOKENS,
 } from "@/lib/constants";
-
-export interface GeminiWorkflowConfig {
-  geminiApiKey: string;
-  githubToken?: string;
-  geminiModel?: string; // Default: gemini-2.5-flash
-}
-
-export interface Finding {
-  item: string;
-  location: string;
-  issue: string;
-  severity: "low" | "moderate" | "severe";
-  codeSnippet?: string;
-  batchId?: number;
-  dependencyUrl?: string;
-}
-
-export interface Findings {
-  maliciousCode: Finding[];
-  dependencies: Finding[];
-  networkActivity: Finding[];
-  fileSystemSafety: Finding[];
-  credentialSafety: Finding[];
-}
-
-export interface ScanResult {
-  repoUrl: string;
-  repoMetadata?: any;
-  findings: Findings;
-  safetyLevel: "safe" | "warning" | "severe";
-  aiSummary: string;
-  scannedAt: string;
-  validated: boolean;
-  corrections?: string[];
-}
+import type {
+  Finding,
+  Findings,
+  ScanResult,
+  RepoContentData,
+  GeminiSchema,
+  GeminiWorkflowConfig,
+  SafetyLevel,
+} from "@/types/scan";
+import type { PackageJson, GitHubRepoMetadata, GitHubTreeItem } from "@/types/github";
 
 export class GeminiScanWorkflow {
   private geminiService: GeminiService;
@@ -170,7 +145,7 @@ export class GeminiScanWorkflow {
   private parsePackageJson(
     packageJsonContent: string | null | undefined,
     log: (msg: string) => void
-  ): { packageJson: any; installScripts: string[] } {
+  ): { packageJson: PackageJson | null; installScripts: string[] } {
     let packageJson = null;
     let installScripts: string[] = [];
 
@@ -201,7 +176,7 @@ export class GeminiScanWorkflow {
   /**
    * Extract dependency information from package.json
    */
-  private extractDependencies(packageJson: any): {
+  private extractDependencies(packageJson: PackageJson | null): {
     production: string[];
     dev: string[];
   } {
@@ -222,7 +197,7 @@ export class GeminiScanWorkflow {
   /**
    * Step 1: Fetch repository content (GitHub API - no LLM)
    */
-  private async fetchRepoContent(repoUrl: string): Promise<any> {
+  private async fetchRepoContent(repoUrl: string): Promise<RepoContentData> {
     const log = (msg: string) => console.log(`   ${msg}`);
 
     const { owner, repo } = this.githubClient.parseRepoUrl(repoUrl);
@@ -305,7 +280,7 @@ export class GeminiScanWorkflow {
   private buildRiskDetectionPrompt(
     batch: string[],
     batchNum: number,
-    repoData: any
+    repoData: RepoContentData
   ): string {
     const batchFilesDetails = batch
       .map((path) => {
@@ -397,7 +372,7 @@ Return JSON in this exact format:
   /**
    * Create the JSON schema for risk detection response
    */
-  private createRiskDetectionSchema(): any {
+  private createRiskDetectionSchema(): GeminiSchema {
     const findingSchema = {
       type: SchemaType.OBJECT,
       properties: {
@@ -469,8 +444,12 @@ Return JSON in this exact format:
   /**
    * Merge findings from a batch into the aggregated findings
    */
-  private mergeFindings(allFindings: Findings, batchFindings: any): void {
-    const findings = batchFindings.findings || batchFindings;
+  private mergeFindings(
+    allFindings: Findings,
+    batchFindings: Findings | { findings: Findings }
+  ): void {
+    const findings =
+      "findings" in batchFindings ? batchFindings.findings : batchFindings;
 
     if (findings.maliciousCode && Array.isArray(findings.maliciousCode)) {
       allFindings.maliciousCode.push(...findings.maliciousCode);
@@ -499,10 +478,10 @@ Return JSON in this exact format:
     batch: string[],
     batchNum: number,
     totalBatches: number,
-    repoData: any,
+    repoData: RepoContentData,
     scanStartTime: number,
     log: (msg: string) => void
-  ): Promise<any | null> {
+  ): Promise<Findings | null> {
     log(
       `   📋 Batch ${batchNum}/${totalBatches}: Preparing ${batch.length} files for analysis...`
     );
@@ -557,7 +536,7 @@ Return JSON in this exact format:
    * Step 2: Detect security risks using Gemini
    */
   private async detectRisks(
-    repoData: any,
+    repoData: RepoContentData,
     repoUrl: string
   ): Promise<{ findings: Findings; scanFolderPath: string }> {
     const log = (msg: string) => console.log(`   ${msg}`);
@@ -641,7 +620,7 @@ Return JSON in this exact format:
    */
   private buildSafetyLevelPrompt(
     findings: Findings,
-    repoMetadata: any
+    repoMetadata: GitHubRepoMetadata
   ): string {
     return `Analyze these security findings and provide safety level and summary FOR CONTRIBUTORS:
 
@@ -681,7 +660,7 @@ Return JSON in this exact format:
   /**
    * Create the JSON schema for safety level response
    */
-  private createSafetyLevelSchema(): any {
+  private createSafetyLevelSchema(): GeminiSchema {
     return {
       type: SchemaType.OBJECT,
       properties: {
@@ -704,10 +683,10 @@ Return JSON in this exact format:
   private async calculateSafetyLevel(
     findings: Findings,
     repoUrl: string,
-    repoMetadata: any,
+    repoMetadata: GitHubRepoMetadata,
     existingFolderPath: string
   ): Promise<{
-    safetyLevel: string;
+    safetyLevel: SafetyLevel;
     aiSummary: string;
     scanFolderPath: string;
   }> {
@@ -735,7 +714,7 @@ Return JSON in this exact format:
 
     log(`   ⏳ Waiting for Gemini response...`);
     const result = await this.geminiService.callGeminiJSON<{
-      safetyLevel: string;
+      safetyLevel: SafetyLevel;
       aiSummary: string;
     }>(prompt, {
       temperature: GEMINI_SAFETY_LEVEL_TEMPERATURE,

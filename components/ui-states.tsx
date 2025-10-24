@@ -13,7 +13,7 @@ interface LoadingSpinnerProps {
   className?: string;
 }
 
-export function LoadingSpinner({ message, className }: LoadingSpinnerProps) {
+export function LoadingSpinner({ message, className }: LoadingSpinnerProps): JSX.Element {
   return (
     <div className={cn("flex flex-col items-center justify-center py-12 gap-3", className)}>
       <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -30,7 +30,7 @@ interface ErrorMessageProps {
   className?: string;
 }
 
-export function ErrorMessage({ message, className }: ErrorMessageProps) {
+export function ErrorMessage({ message, className }: ErrorMessageProps): JSX.Element {
   return (
     <div
       className={cn(
@@ -52,7 +52,7 @@ interface SuccessMessageProps {
   className?: string;
 }
 
-export function SuccessMessage({ message, className }: SuccessMessageProps) {
+export function SuccessMessage({ message, className }: SuccessMessageProps): JSX.Element {
   return (
     <div
       className={cn(
@@ -83,7 +83,7 @@ export function EmptyState({
   message,
   action,
   className,
-}: EmptyStateProps) {
+}: EmptyStateProps): JSX.Element {
   return (
     <div className={cn("text-center py-12", className)}>
       {icon && <div className="flex justify-center mb-4">{icon}</div>}

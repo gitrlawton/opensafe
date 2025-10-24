@@ -10,7 +10,7 @@ interface PageLayoutProps {
   className?: string;
 }
 
-export function PageLayout({ children, className }: PageLayoutProps) {
+export function PageLayout({ children, className }: PageLayoutProps): JSX.Element {
   return (
     <div className={cn("min-h-screen bg-background", className)}>
       {children}
@@ -28,7 +28,7 @@ export function PageContainer({
   children,
   className,
   maxWidth = "full",
-}: PageContainerProps) {
+}: PageContainerProps): JSX.Element {
   const maxWidthClasses = {
     sm: "max-w-sm",
     md: "max-w-md",

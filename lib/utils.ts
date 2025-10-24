@@ -6,6 +6,8 @@ import {
   TIME_DISPLAY_HOURS_THRESHOLD,
   TIME_DISPLAY_DAYS_THRESHOLD,
 } from "./constants";
+import type { ParsedGitHubUrl } from "@/types/github";
+import type { SafetyLevel, SafetyScore } from "@/types/scan";
 
 /**
  * Merges Tailwind CSS classes with proper deduplication
@@ -69,14 +71,14 @@ export function formatTimestamp(timestamp: string | Date): string {
  * mapSafetyLevelToScore("unknown") // "CAUTION" (default)
  */
 export function mapSafetyLevelToScore(
-  safetyLevel: string
-): "SAFE" | "CAUTION" | "UNSAFE" {
-  const safetyScoreMap: Record<string, "SAFE" | "CAUTION" | "UNSAFE"> = {
+  safetyLevel: SafetyLevel | string
+): SafetyScore {
+  const safetyScoreMap: Record<string, SafetyScore> = {
     safe: "SAFE",
     caution: "CAUTION",
     unsafe: "UNSAFE",
   };
-  return safetyScoreMap[safetyLevel] || "CAUTION";
+  return safetyScoreMap[safetyLevel.toLowerCase()] || "CAUTION";
 }
 
 /**
@@ -97,7 +99,7 @@ export function mapSafetyLevelToScore(
  * parseGitHubUrl("github.com/gitrlawton/test-repo.git")
  * // { owner: "gitrlawton", repo: "test-repo" }
  */
-export function parseGitHubUrl(url: string): { owner: string; repo: string } {
+export function parseGitHubUrl(url: string): ParsedGitHubUrl {
   const match = url.match(/github\.com\/([^\/]+)\/([^\/]+)/);
   if (!match) {
     throw new Error(`Invalid GitHub URL: ${url}`);

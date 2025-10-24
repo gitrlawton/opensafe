@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { PageLayout, PageContainer } from "@/components/page-layout";
 import { BackLink } from "@/components/back-link";
 
-export default function Loading() {
+export default function Loading(): JSX.Element {
   return (
     <PageLayout>
       <PageContainer maxWidth="4xl">

@@ -15,7 +15,7 @@ import {
 import { PageLayout, PageContainer } from "@/components/page-layout";
 import Link from "next/link";
 
-export default function NotFound() {
+export default function NotFound(): JSX.Element {
   return (
     <PageLayout>
       <PageContainer

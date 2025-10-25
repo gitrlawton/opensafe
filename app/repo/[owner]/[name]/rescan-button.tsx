@@ -48,7 +48,7 @@ export function RescanButton({ owner, name }: RescanButtonProps): JSX.Element {
       size="sm"
       onClick={handleRescan}
       disabled={isScanning}
-      className="cursor-pointer"
+      className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-foreground"
     >
       <RefreshCw className={`mr-2 h-4 w-4 ${isScanning ? "animate-spin" : ""}`} />
       {isScanning ? "Scanning..." : "Re-scan Repo"}

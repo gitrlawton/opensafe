@@ -24,9 +24,9 @@ OpenSafe helps protect open source contributors by scanning GitHub repositories 
 
 1. **Visit the App** - Go to the [OpenSafe web application](https://www.opensafe.app/)
 2. **Sign In** - Authenticate with your GitHub account
-3. Navigate to the Scan Repo page and enter the URL of any public repository you want to contribute to
+3. **Navigate** to the Scan Repo page and enter the URL of a public repository you want to contribute to
 4. **Scan** - Click "Start Scan" to scan the repository for threats
-5. **Review Safety Report** - See if it's safe to clone and contribute, or what risks exist
+5. **Review Safety Report** - See if it's safe to clone and contribute to, or what risks exist
 
 ## Tech Stack
 

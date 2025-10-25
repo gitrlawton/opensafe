@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Star } from "lucide-react";
 import { auth0 } from "@/lib/auth0";
 import { SignInButton } from "@/components/auth/sign-in-button";
 
@@ -38,6 +39,14 @@ export async function Header(): Promise<JSX.Element> {
               Scan Repo
             </Link>
           )}
+          <Link
+            href="https://github.com/gitrlawton/opensafe"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+          >
+            <Star className="h-4 w-4 fill-none group-hover:fill-yellow-500 group-hover:stroke-yellow-500" />
+          </Link>
           <SignInButton user={session?.user} />
         </nav>
       </div>

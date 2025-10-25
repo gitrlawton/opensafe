@@ -23,7 +23,7 @@ export function SignInButton({ user }: SignInButtonProps): JSX.Element {
   if (!user) {
     return (
       <Button size="sm" asChild>
-        <a href="/auth/login">
+        <a href="/auth/login" className="cursor-pointer">
           <Github className="mr-2 h-4 w-4" />
           Log in with GitHub
         </a>
@@ -34,14 +34,14 @@ export function SignInButton({ user }: SignInButtonProps): JSX.Element {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm">
+        <Button variant="outline" size="sm" className="cursor-pointer">
           <Github className="mr-2 h-4 w-4" />
           {user.name || "Account"}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem asChild>
-          <a href="/auth/logout">Log out</a>
+          <a href="/auth/logout" className="cursor-pointer">Log out</a>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

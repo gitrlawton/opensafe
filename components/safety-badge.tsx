@@ -37,7 +37,7 @@ export function SafetyBadge({
           : "danger";
 
   const colorClasses = getSeverityBackgroundColor(uiType);
-  const label = getSafetyScoreLabel(score);
+  const label = getSafetyScoreLabel(score).toUpperCase();
 
   return (
     <div className={cn("inline-flex items-center gap-2", className)}>

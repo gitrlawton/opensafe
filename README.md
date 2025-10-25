@@ -6,9 +6,9 @@
 
 ## About
 
-OpenSafe protects open source contributors by scanning GitHub repositories for malicious code, backdoors, and dangerous dependencies **before you clone or contribute**. Using AI-powered analysis, OpenSafe helps developers safely identify which open source projects are likely safe to explore and contribute to and which are not.
+OpenSafe helps protect open source contributors by scanning GitHub repositories for malicious code and dangerous dependencies **before they clone or contribute**. Powered by AI analysis, OpenSafe identifies which open source projects are likely safe to clone and contribute to and which ones are not.
 
-**[Try OpenSafe Live](#)** _(Add your deployment URL here)_
+**[Try OpenSafe Live](https://www.opensafe.app/)**
 
 ## Features
 
@@ -22,10 +22,10 @@ OpenSafe protects open source contributors by scanning GitHub repositories for m
 
 ## How to Use
 
-1. **Visit the App** - Go to the [OpenSafe web application](#) _(Add your deployment URL here)_
+1. **Visit the App** - Go to the [OpenSafe web application](https://www.opensafe.app/)
 2. **Sign In** - Authenticate with your GitHub account
-3. **Scan Repo** - Navigate to the scan page and enter the URL of any public repository you want to contribute to
-4. **Scan** - Click "Start Scan" to check for threats
+3. Navigate to the Scan Repo page and enter the URL of any public repository you want to contribute to
+4. **Scan** - Click "Start Scan" to scan the repository for threats
 5. **Review Safety Report** - See if it's safe to clone and contribute, or what risks exist
 
 ## Tech Stack
@@ -40,7 +40,26 @@ Built with the following technologies:
 
 ## Screenshots
 
-_Screenshots coming soon - add images showing the scan interface and security report_
+### Home Page - Repository Index
+
+![Home Page](public/screenshots/0-Home_Page.PNG)
+_Browse previously scanned repositories and their safety levels_
+
+### Scan Repository
+
+![Scan Repository](public/screenshots/1-Scan_Repo.PNG)
+_Enter any GitHub repository URL to start a security scan_
+
+### Scan Results - Safe Repository
+
+![Safe Repository Results](public/screenshots/4-Scan_Results_SAFE.PNG)
+_Detailed analysis showing a safe repository with no threats detected_
+
+### Scan Results - Unsafe Repository
+
+![Unsafe Repository Results - Part 1](public/screenshots/2-Scan_Results_UNSAFE_Part1.PNG)
+![Unsafe Repository Results - Part 2](public/screenshots/3-Scan_Results_UNSAFE_Part2.PNG)
+_Comprehensive threat report showing detected security issues and vulnerabilities_
 
 ## Contributing
 
@@ -48,8 +67,8 @@ _Screenshots coming soon - add images showing the scan interface and security re
 
 We're excited to welcome contributors soon! In the meantime:
 
-- ⭐ **Star and Watch** this repository to show your interest and be notified when we're ready to accept contributions
-- 💡 **Open an issue** if you have feature ideas or bug reports
+- Star and watch this repository to show your interest and be notified when we're ready to accept contributions
+- Open an issue if you have feature ideas or bug reports
 
 ## License
 

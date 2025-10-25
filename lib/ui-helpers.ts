@@ -251,5 +251,5 @@ export function getSafetyScoreLabel(score: string | number): string {
   // Numeric scores (legacy format)
   if (score >= 90) return "Safe";
   if (score >= 70) return "Caution";
-  return "Risk";
+  return "Unsafe";
 }

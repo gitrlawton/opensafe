@@ -58,7 +58,7 @@ const mockRepos = [
     name: "tensorflow",
     owner: "tensorflow",
     language: "Python",
-    safetyScore: 88,
+    safetyScore: "SAFE",
     lastScanned: "6 hours ago",
   },
   {
@@ -82,7 +82,7 @@ const mockRepos = [
     name: "express",
     owner: "expressjs",
     language: "JavaScript",
-    safetyScore: 85,
+    safetyScore: "SAFE",
     lastScanned: "8 hours ago",
   },
   {

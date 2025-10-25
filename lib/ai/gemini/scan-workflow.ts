@@ -42,6 +42,7 @@ export class GeminiScanWorkflow {
 
   /**
    * Helper: Save scan findings to disk for debugging/comparison
+   * Only writes files in development/testing environments
    */
   private saveScanFindings(
     repoUrl: string,
@@ -49,6 +50,11 @@ export class GeminiScanWorkflow {
     filename: string,
     existingFolderPath?: string
   ): string {
+    // Skip file writing in production
+    if (process.env.NODE_ENV === "production") {
+      return "";
+    }
+
     let scanResultsDir: string;
 
     if (existingFolderPath) {

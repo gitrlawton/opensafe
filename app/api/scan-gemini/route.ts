@@ -5,21 +5,19 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { ZodError } from "zod";
-import { GeminiScanWorkflow } from "@/lib/ai/gemini/scan-workflow";
 import { auth0 } from "@/lib/auth0";
-import { insertScannedRepo } from "@/lib/database/snowflake";
-import { DEFAULT_GEMINI_MODEL } from "@/lib/constants";
-import {
-  mapSafetyLevelToScore,
-  parseGitHubUrl,
-  createApiError,
-  logError,
-} from "@/lib/utils";
+import { parseGitHubUrl, createApiError, logError } from "@/lib/utils";
 import {
   scanRequestSchema,
   validateAndSanitize,
   createValidationError,
 } from "@/lib/validations/api";
+import {
+  fetchRepoScanContext,
+  getCachedScanIfUnchanged,
+  executeScanStrategy,
+  saveScanResults,
+} from "@/lib/scan/scan-helpers";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
@@ -95,46 +93,43 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    // Initialize Gemini workflow
-    const workflow = new GeminiScanWorkflow({
-      geminiApiKey,
-      githubToken,
-      geminiModel: DEFAULT_GEMINI_MODEL,
-    });
+    // Fetch repository context (metadata + previous scan)
+    let scanContext;
+    try {
+      scanContext = await fetchRepoScanContext(
+        repoOwner,
+        cleanRepoName,
+        githubToken
+      );
+    } catch (error) {
+      logError("[API]", "Failed to fetch repository metadata", error);
+      return NextResponse.json(
+        createApiError("Failed to fetch repository information"),
+        { status: 400 }
+      );
+    }
 
-    // Execute scan
-    console.log(`[API] Starting Gemini-based scan for: ${repoUrl}`);
-    const result = await workflow.scanRepository(repoUrl);
-    console.log(`[API] Scan completed: ${result.safetyLevel}`);
-    console.log(
-      `[API] Repo metadata:`,
-      JSON.stringify(result.repoMetadata, null, 2)
+    // Check if we can return cached results (repo unchanged since last scan)
+    const cachedResult = getCachedScanIfUnchanged(scanContext);
+    if (cachedResult) {
+      return NextResponse.json(cachedResult, { status: 200 });
+    }
+
+    // Execute appropriate scan strategy (trusted by stars or full AI scan)
+    const result = await executeScanStrategy(
+      repoUrl,
+      scanContext.repoMetadata,
+      geminiApiKey,
+      githubToken
     );
 
-    // Map safety level from scan result to database format
-    const safetyScore = mapSafetyLevelToScore(result.safetyLevel);
-
-    // Detect language from repo metadata or use a default
-    const language = result.repoMetadata?.language || "Unknown";
-    console.log(`[API] Detected language: ${language}`);
-
-    // Save results to Snowflake
-    try {
-      await insertScannedRepo({
-        repoOwner,
-        repoName: cleanRepoName,
-        language,
-        safetyScore,
-        findings: result,
-        scannedBy: session.user.email || session.user.name || "unknown",
-      });
-      console.log(
-        `[API] Scan results saved to Snowflake for ${repoOwner}/${cleanRepoName}`
-      );
-    } catch (snowflakeError) {
-      logError("[API]", "Failed to save to Snowflake", snowflakeError);
-      // Continue even if Snowflake save fails - don't fail the entire request
-    }
+    // Save scan results to database
+    await saveScanResults(
+      repoOwner,
+      cleanRepoName,
+      result,
+      session.user.email || session.user.name || "unknown"
+    );
 
     // Return results
     return NextResponse.json(result, { status: 200 });

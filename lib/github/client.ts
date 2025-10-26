@@ -74,6 +74,9 @@ export class GitHubClient {
       name: data.name,
       defaultBranch: data.default_branch || "main",
       language: data.language || "Unknown",
+      description: data.description || undefined,
+      stars: data.stargazers_count || 0,
+      lastPushedAt: data.pushed_at || undefined,
     };
   }
 

@@ -23,14 +23,6 @@ import type { ScannedRepo } from "@/types/api";
 const mockRepos = [
   {
     id: "1",
-    name: "react",
-    owner: "facebook",
-    language: "JavaScript",
-    safetyScore: 95,
-    lastScanned: "2 hours ago",
-  },
-  {
-    id: "2",
     name: "vue",
     owner: "vuejs",
     language: "TypeScript",
@@ -38,7 +30,7 @@ const mockRepos = [
     lastScanned: "5 hours ago",
   },
   {
-    id: "3",
+    id: "2",
     name: "suspicious-package",
     owner: "unknown-dev",
     language: "Python",
@@ -46,7 +38,7 @@ const mockRepos = [
     lastScanned: "1 day ago",
   },
   {
-    id: "4",
+    id: "3",
     name: "next.js",
     owner: "vercel",
     language: "TypeScript",
@@ -54,7 +46,7 @@ const mockRepos = [
     lastScanned: "3 hours ago",
   },
   {
-    id: "5",
+    id: "4",
     name: "tensorflow",
     owner: "tensorflow",
     language: "Python",
@@ -62,7 +54,7 @@ const mockRepos = [
     lastScanned: "6 hours ago",
   },
   {
-    id: "6",
+    id: "5",
     name: "malicious-script",
     owner: "bad-actor",
     language: "JavaScript",
@@ -70,7 +62,7 @@ const mockRepos = [
     lastScanned: "2 days ago",
   },
   {
-    id: "7",
+    id: "6",
     name: "svelte",
     owner: "sveltejs",
     language: "TypeScript",
@@ -78,7 +70,7 @@ const mockRepos = [
     lastScanned: "4 hours ago",
   },
   {
-    id: "8",
+    id: "7",
     name: "express",
     owner: "expressjs",
     language: "JavaScript",
@@ -86,7 +78,7 @@ const mockRepos = [
     lastScanned: "8 hours ago",
   },
   {
-    id: "9",
+    id: "8",
     name: "example-repo",
     owner: "test-user",
     language: "JavaScript",

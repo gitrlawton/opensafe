@@ -5,9 +5,12 @@ import {
   TIME_DISPLAY_MINUTES_THRESHOLD,
   TIME_DISPLAY_HOURS_THRESHOLD,
   TIME_DISPLAY_DAYS_THRESHOLD,
+  TRUSTED_REPO_STAR_THRESHOLD,
+  QUERY_PARAM_UNCHANGED,
+  QUERY_PARAM_TRUSTED,
 } from "./constants";
-import type { ParsedGitHubUrl } from "@/types/github";
-import type { SafetyLevel, SafetyScore } from "@/types/scan";
+import type { ParsedGitHubUrl, GitHubRepoMetadata } from "@/types/github";
+import type { SafetyLevel, SafetyScore, ScanResult } from "@/types/scan";
 
 /**
  * Merges Tailwind CSS classes with proper deduplication
@@ -207,4 +210,126 @@ export function logError(context: string, message: string, error?: unknown): voi
   if (error instanceof Error && error.stack) {
     console.error(error.stack);
   }
+}
+
+/**
+ * Determines if a repository should be trusted based on its star count
+ * Repositories with star counts at or above the threshold are considered trusted
+ *
+ * @param repoMetadata - GitHub repository metadata containing star count
+ * @returns true if repository meets the trust threshold, false otherwise
+ *
+ * @example
+ * isRepoTrustedByStar({ stars: 5000, ... }) // true
+ * isRepoTrustedByStar({ stars: 500, ... }) // false
+ */
+export function isRepoTrustedByStar(repoMetadata: GitHubRepoMetadata): boolean {
+  return (repoMetadata.stars ?? 0) >= TRUSTED_REPO_STAR_THRESHOLD;
+}
+
+/**
+ * Creates a safe scan result for trusted repositories
+ * Used when a repository is automatically marked as safe based on star count
+ *
+ * @param repoUrl - GitHub repository URL
+ * @param repoMetadata - Repository metadata including star count
+ * @returns Complete scan result marked as safe with trust indicator
+ *
+ * @example
+ * createTrustedRepoScanResult("https://github.com/facebook/react", metadata)
+ * // Returns ScanResult with safetyLevel: "safe" and trustedByStar: true
+ */
+export function createTrustedRepoScanResult(
+  repoUrl: string,
+  repoMetadata: GitHubRepoMetadata
+): ScanResult {
+  const starCount = repoMetadata.stars ?? 0;
+
+  return {
+    repoUrl,
+    repoMetadata,
+    findings: {
+      maliciousCode: [],
+      dependencies: [],
+      networkActivity: [],
+      fileSystemSafety: [],
+      credentialSafety: [],
+    },
+    safetyLevel: "safe",
+    aiSummary: `This repository is considered safe based on community trust. With ${starCount.toLocaleString()} stars on GitHub, it has been reviewed and used by a large number of developers in the open source community. Popular repositories with significant community engagement are generally well-maintained and vetted for security issues.`,
+    scannedAt: new Date().toISOString(),
+    validated: true,
+    trustedByStar: true,
+  };
+}
+
+/**
+ * Checks if a repository has been updated since it was last scanned
+ * Compares the repository's last push date with the last scan date
+ *
+ * @param lastPushedAt - ISO timestamp of repository's last push (from GitHub API)
+ * @param lastScannedAt - ISO timestamp of last scan (from database)
+ * @returns true if repository has not been updated since last scan, false otherwise
+ *
+ * @example
+ * isRepoUnchangedSinceLastScan("2025-01-15T10:00:00Z", "2025-01-20T12:00:00Z") // true (no new commits)
+ * isRepoUnchangedSinceLastScan("2025-01-25T10:00:00Z", "2025-01-20T12:00:00Z") // false (new commits)
+ */
+export function isRepoUnchangedSinceLastScan(
+  lastPushedAt: string | undefined,
+  lastScannedAt: string | undefined
+): boolean {
+  if (!lastPushedAt || !lastScannedAt) {
+    return false; // If either date is missing, assume repo has changed
+  }
+
+  const pushedDate = new Date(lastPushedAt);
+  const scannedDate = new Date(lastScannedAt);
+
+  // Check if dates are valid
+  if (isNaN(pushedDate.getTime()) || isNaN(scannedDate.getTime())) {
+    return false;
+  }
+
+  // Repo is unchanged if last push was before or at the same time as last scan
+  return pushedDate <= scannedDate;
+}
+
+/**
+ * Builds a repository detail page URL with query parameters based on scan result
+ * Adds flags for unchanged repos and trusted repos
+ *
+ * @param owner - Repository owner username
+ * @param repo - Repository name
+ * @param scanResult - Scan result containing flags
+ * @returns URL path with query parameters if applicable
+ *
+ * @example
+ * buildRepoUrl("facebook", "react", { unchangedSinceLastScan: true })
+ * // "/repo/facebook/react?unchanged=true"
+ *
+ * buildRepoUrl("facebook", "react", { trustedByStar: true })
+ * // "/repo/facebook/react?trusted=true"
+ *
+ * buildRepoUrl("facebook", "react", {})
+ * // "/repo/facebook/react"
+ */
+export function buildRepoUrl(
+  owner: string,
+  repo: string,
+  scanResult: Partial<ScanResult>
+): string {
+  const queryParams = new URLSearchParams();
+
+  if (scanResult.unchangedSinceLastScan) {
+    queryParams.set(QUERY_PARAM_UNCHANGED, "true");
+  }
+  if (scanResult.trustedByStar) {
+    queryParams.set(QUERY_PARAM_TRUSTED, "true");
+  }
+
+  const queryString = queryParams.toString();
+  const baseUrl = `/repo/${owner}/${repo}`;
+
+  return queryString ? `${baseUrl}?${queryString}` : baseUrl;
 }

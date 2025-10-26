@@ -63,6 +63,19 @@ export const SCAN_BATCH_SIZE = 5;
 /** Maximum number of repositories to fetch from database */
 export const MAX_REPOS_FETCH_LIMIT = 100;
 
+/** Star count threshold for automatically trusting repositories (1000+ stars) */
+export const TRUSTED_REPO_STAR_THRESHOLD = 1000;
+
+// ============================================================================
+// URL Query Parameter Constants
+// ============================================================================
+
+/** Query parameter key for unchanged repository flag */
+export const QUERY_PARAM_UNCHANGED = "unchanged";
+
+/** Query parameter key for trusted repository flag */
+export const QUERY_PARAM_TRUSTED = "trusted";
+
 // ============================================================================
 // Time Display Constants
 // ============================================================================

@@ -13,6 +13,7 @@ export interface GitHubRepoMetadata {
   language?: string;
   description?: string;
   stars?: number;
+  lastPushedAt?: string; // ISO timestamp of last push/commit
 }
 
 /**

@@ -15,7 +15,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { parseGitHubUrl, isValidGitHubUrl } from "@/lib/utils";
+import { parseGitHubUrl, isValidGitHubUrl, buildRepoUrl } from "@/lib/utils";
 import { Loader2, Github } from "lucide-react";
 import { ScanningProgress, SCANNING_STEPS_COUNT } from "./scanning-progress";
 import { PageLayout, PageContainer } from "@/components/page-layout";
@@ -82,7 +82,8 @@ function ScanPage(): JSX.Element {
 
       // Redirect to results page after a short delay
       setTimeout(() => {
-        router.push(`/repo/${owner}/${cleanRepo}`);
+        const url = buildRepoUrl(owner, cleanRepo, result);
+        router.push(url);
       }, 1500);
     } catch (error: any) {
       console.error("Scan error:", error);

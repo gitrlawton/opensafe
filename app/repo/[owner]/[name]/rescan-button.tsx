@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { buildRepoUrl } from "@/lib/utils"
 import { RefreshCw } from "lucide-react"
 
 interface RescanButtonProps {
@@ -32,8 +33,11 @@ export function RescanButton({ owner, name }: RescanButtonProps): JSX.Element {
         throw new Error("Scan failed")
       }
 
-      // Refresh the page to show new data
-      router.refresh()
+      const result = await response.json()
+
+      // Redirect to results page with appropriate query parameters
+      const url = buildRepoUrl(owner, name, result)
+      router.push(url)
     } catch (error) {
       console.error("Rescan failed:", error)
       alert("Failed to rescan repository. Please try again.")

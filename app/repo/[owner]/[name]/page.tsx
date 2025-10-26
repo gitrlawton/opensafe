@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { SafetyBadge } from "@/components/safety-badge";
+import { StarBadge } from "@/components/star-badge";
+import { CommunityTrustCallout } from "@/components/community-trust-callout";
+import { UnchangedRepoCallout } from "@/components/unchanged-repo-callout";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -13,6 +16,7 @@ import { getRepoByOwnerAndName } from "@/lib/database/snowflake";
 import { RescanButton } from "./rescan-button";
 import { ContributorNotes } from "./contributor-notes";
 import { formatTimestamp } from "@/lib/utils";
+import { QUERY_PARAM_UNCHANGED, QUERY_PARAM_TRUSTED } from "@/lib/constants";
 import { PageLayout, PageContainer } from "@/components/page-layout";
 import { BackLink } from "@/components/back-link";
 import { SecurityCategory } from "./security-findings";
@@ -67,8 +71,13 @@ const mockRepoDetails = {
   ],
 };
 
-export default async function RepoDetailPage({ params }: RepoPageProps): Promise<JSX.Element> {
+export default async function RepoDetailPage({ params, searchParams }: RepoPageProps): Promise<JSX.Element> {
   const { owner, name } = await params;
+  const query = await searchParams;
+
+  // Check for special query parameters from scan
+  const isUnchangedScan = query?.[QUERY_PARAM_UNCHANGED] === "true";
+  const isTrustedScan = query?.[QUERY_PARAM_TRUSTED] === "true";
 
   // Get authentication status
   const session = await auth0.getSession();
@@ -210,6 +219,9 @@ export default async function RepoDetailPage({ params }: RepoPageProps): Promise
                   {repoData.LANGUAGE || "Unknown"}
                 </span>
                 <span>Last scanned {formatTimestamp(repoData.SCANNED_AT)}</span>
+                {(isTrustedScan || findings.trustedByStar) && findings.repoMetadata?.stars && (
+                  <StarBadge stars={findings.repoMetadata.stars} />
+                )}
               </div>
             </div>
             <SafetyBadge score={repoData.SAFETY_SCORE} />
@@ -227,6 +239,10 @@ export default async function RepoDetailPage({ params }: RepoPageProps): Promise
               </CardDescription>
             </CardHeader>
             <CardContent>
+              {(isTrustedScan || findings.trustedByStar) && <CommunityTrustCallout />}
+              {isUnchangedScan && (
+                <UnchangedRepoCallout lastScannedAt={repoData.SCANNED_AT} />
+              )}
               <p className="text-foreground leading-relaxed">
                 {findings.aiSummary || "No summary available"}
               </p>

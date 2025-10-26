@@ -56,6 +56,8 @@ export interface ScanResult {
   scannedAt: string;
   validated: boolean;
   corrections?: string[];
+  trustedByStar?: boolean; // Indicates the repo was marked safe based on star count
+  unchangedSinceLastScan?: boolean; // Indicates the repo hasn't been updated since last scan
 }
 
 /**

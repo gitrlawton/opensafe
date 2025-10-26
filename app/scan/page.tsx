@@ -138,7 +138,7 @@ function ScanPage(): JSX.Element {
               <Button
                 type="submit"
                 disabled={isScanning || !repoUrl}
-                className="w-full"
+                className="w-full cursor-pointer"
               >
                 {isScanning ? (
                   <>

@@ -11,10 +11,11 @@ import { z } from "zod";
 export const serverEnvSchema = z.object({
   // Auth0 Configuration
   AUTH0_SECRET: z.string().min(32, "AUTH0_SECRET must be at least 32 characters"),
-  AUTH0_BASE_URL: z.string().url("AUTH0_BASE_URL must be a valid URL"),
-  AUTH0_ISSUER_BASE_URL: z.string().url("AUTH0_ISSUER_BASE_URL must be a valid URL"),
+  APP_BASE_URL: z.string().url("APP_BASE_URL must be a valid URL"),
+  AUTH0_DOMAIN: z.string().min(1, "AUTH0_DOMAIN is required"),
   AUTH0_CLIENT_ID: z.string().min(1, "AUTH0_CLIENT_ID is required"),
   AUTH0_CLIENT_SECRET: z.string().min(1, "AUTH0_CLIENT_SECRET is required"),
+  AUTH0_SCOPE: z.string().optional(),
 
   // API Keys
   GEMINI_API_KEY: z.string().min(1, "GEMINI_API_KEY is required"),

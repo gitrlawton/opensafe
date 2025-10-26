@@ -19,74 +19,6 @@ import { EmptyState } from "@/components/ui-states";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ScannedRepo } from "@/types/api";
 
-// Mock data
-const mockRepos = [
-  {
-    id: "1",
-    name: "vue",
-    owner: "vuejs",
-    language: "TypeScript",
-    safetyScore: 92,
-    lastScanned: "5 hours ago",
-  },
-  {
-    id: "2",
-    name: "suspicious-package",
-    owner: "unknown-dev",
-    language: "Python",
-    safetyScore: 45,
-    lastScanned: "1 day ago",
-  },
-  {
-    id: "3",
-    name: "next.js",
-    owner: "vercel",
-    language: "TypeScript",
-    safetyScore: 98,
-    lastScanned: "3 hours ago",
-  },
-  {
-    id: "4",
-    name: "tensorflow",
-    owner: "tensorflow",
-    language: "Python",
-    safetyScore: "SAFE",
-    lastScanned: "6 hours ago",
-  },
-  {
-    id: "5",
-    name: "malicious-script",
-    owner: "bad-actor",
-    language: "JavaScript",
-    safetyScore: 12,
-    lastScanned: "2 days ago",
-  },
-  {
-    id: "6",
-    name: "svelte",
-    owner: "sveltejs",
-    language: "TypeScript",
-    safetyScore: 94,
-    lastScanned: "4 hours ago",
-  },
-  {
-    id: "7",
-    name: "express",
-    owner: "expressjs",
-    language: "JavaScript",
-    safetyScore: "SAFE",
-    lastScanned: "8 hours ago",
-  },
-  {
-    id: "8",
-    name: "example-repo",
-    owner: "test-user",
-    language: "JavaScript",
-    safetyScore: "CAUTION",
-    lastScanned: "1 hour ago",
-  },
-];
-
 export default function HomePage(): JSX.Element {
   const [searchQuery, setSearchQuery] = useState("");
   const [allRepos, setAllRepos] = useState<ScannedRepo[]>([]);
@@ -103,16 +35,13 @@ export default function HomePage(): JSX.Element {
           throw new Error("Failed to fetch repositories");
         }
 
-        const snowflakeRepos = await response.json();
-
-        // Merge with mock data - show Snowflake repos first, then mock data
-        setAllRepos([...snowflakeRepos, ...mockRepos]);
+        const repos = await response.json();
+        setAllRepos(repos);
         setError(null);
       } catch (err: any) {
         console.error("Failed to fetch repos:", err);
         setError(err.message || "Failed to fetch repositories");
-        // Fall back to just mock data if Snowflake fails
-        setAllRepos(mockRepos);
+        setAllRepos([]);
       } finally {
         setIsLoading(false);
       }
@@ -150,10 +79,10 @@ export default function HomePage(): JSX.Element {
         </div>
 
         {error && (
-          <div className="mb-4 p-4 border border-warning/50 rounded-md bg-warning/10">
-            <p className="text-sm text-warning-foreground">
-              <strong>Note:</strong> Unable to load recent scans from the
-              database. Showing example data only. {error}
+          <div className="mb-4 p-4 border border-destructive/50 rounded-md bg-destructive/10">
+            <p className="text-sm text-destructive-foreground">
+              <strong>Error:</strong> Unable to load recent scans from the
+              database. {error}
             </p>
           </div>
         )}

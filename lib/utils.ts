@@ -5,6 +5,11 @@ import {
   TIME_DISPLAY_MINUTES_THRESHOLD,
   TIME_DISPLAY_HOURS_THRESHOLD,
   TIME_DISPLAY_DAYS_THRESHOLD,
+  DAYS_PER_WEEK,
+  TIME_DISPLAY_WEEKS_THRESHOLD,
+  DAYS_PER_MONTH,
+  TIME_DISPLAY_MONTHS_THRESHOLD,
+  DAYS_PER_YEAR,
   TRUSTED_REPO_STAR_THRESHOLD,
   QUERY_PARAM_UNCHANGED,
   QUERY_PARAM_TRUSTED,
@@ -30,11 +35,14 @@ export function sleep(ms: number): Promise<void> {
 /**
  * Formats a timestamp into a human-readable relative time string
  * @param timestamp - ISO timestamp string or Date object
- * @returns Formatted time string (e.g., "2 hours ago", "Just now")
+ * @returns Formatted time string (e.g., "2 hours ago", "3 weeks ago", "5 months ago", "2 years ago")
  *
  * @example
  * formatTimestamp("2025-01-19T08:23:31.000Z") // "2 hours ago"
  * formatTimestamp(new Date()) // "Just now"
+ * formatTimestamp("2024-12-15T10:00:00.000Z") // "6 weeks ago"
+ * formatTimestamp("2024-06-01T10:00:00.000Z") // "7 months ago"
+ * formatTimestamp("2022-01-15T10:00:00.000Z") // "3 years ago"
  */
 export function formatTimestamp(timestamp: string | Date): string {
   if (!timestamp) return "Unknown";
@@ -52,6 +60,9 @@ export function formatTimestamp(timestamp: string | Date): string {
   const diffMins = Math.floor(diffMs / MS_PER_MINUTE);
   const diffHours = Math.floor(diffMins / TIME_DISPLAY_MINUTES_THRESHOLD);
   const diffDays = Math.floor(diffHours / TIME_DISPLAY_HOURS_THRESHOLD);
+  const diffWeeks = Math.floor(diffDays / DAYS_PER_WEEK);
+  const diffMonths = Math.floor(diffDays / DAYS_PER_MONTH);
+  const diffYears = Math.floor(diffDays / DAYS_PER_YEAR);
 
   if (diffMins < 1) return "Just now";
   if (diffMins < TIME_DISPLAY_MINUTES_THRESHOLD)
@@ -60,8 +71,15 @@ export function formatTimestamp(timestamp: string | Date): string {
     return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
   if (diffDays < TIME_DISPLAY_DAYS_THRESHOLD)
     return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+  if (diffWeeks <= TIME_DISPLAY_WEEKS_THRESHOLD)
+    return `${diffWeeks} week${diffWeeks > 1 ? "s" : ""} ago`;
+  if (diffMonths >= 1 && diffMonths <= TIME_DISPLAY_MONTHS_THRESHOLD)
+    return `${diffMonths} month${diffMonths > 1 ? "s" : ""} ago`;
+  if (diffYears >= 1)
+    return `${diffYears} year${diffYears > 1 ? "s" : ""} ago`;
 
-  return scanned.toLocaleDateString();
+  // Fallback for edge case (between 3 weeks and 1 month)
+  return `${diffWeeks} week${diffWeeks > 1 ? "s" : ""} ago`;
 }
 
 /**

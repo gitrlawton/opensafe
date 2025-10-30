@@ -86,5 +86,20 @@ export const TIME_DISPLAY_MINUTES_THRESHOLD = 60;
 /** Hours threshold for showing "X hours ago" */
 export const TIME_DISPLAY_HOURS_THRESHOLD = 24;
 
-/** Days threshold for showing "X days ago" (after 7 days, show date) */
+/** Days threshold for showing "X days ago" (after 7 days, show weeks) */
 export const TIME_DISPLAY_DAYS_THRESHOLD = 7;
+
+/** Days in a week (7) */
+export const DAYS_PER_WEEK = 7;
+
+/** Weeks threshold for showing "X weeks ago" (after 3 weeks, show months) */
+export const TIME_DISPLAY_WEEKS_THRESHOLD = 3;
+
+/** Days in a month (approximate - 30.44 days average) */
+export const DAYS_PER_MONTH = 30.44;
+
+/** Months threshold for showing "X months ago" (after 11 months, show years) */
+export const TIME_DISPLAY_MONTHS_THRESHOLD = 11;
+
+/** Days in a year (approximate - 365.25 for leap years) */
+export const DAYS_PER_YEAR = 365.25;

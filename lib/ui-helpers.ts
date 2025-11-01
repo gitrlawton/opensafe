@@ -1,6 +1,21 @@
 /**
  * UI Helper Utilities
- * Shared utilities for UI display, styling, and formatting
+ *
+ * This module provides shared utilities for UI display, styling, and formatting.
+ * Centralizes logic for converting data models to visual representations.
+ *
+ * Key Functions:
+ * - Severity mapping: Converts security severities to UI colors and icons
+ * - Badge styling: Generates Tailwind CSS classes for consistent visual feedback
+ * - Category labeling: Maps internal category keys to human-readable labels
+ * - Safety score display: Converts safety scores to user-friendly labels
+ *
+ * Design System Integration:
+ * - All functions return Tailwind CSS class names
+ * - Consistent color palette (success/warning/danger)
+ * - Opacity variants for backgrounds and borders
+ *
+ * @module lib/ui-helpers
  */
 
 import type { FindingSeverity } from "@/types/scan";

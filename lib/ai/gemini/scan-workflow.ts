@@ -1,6 +1,23 @@
 /**
  * Gemini-Based Repository Scan Workflow
- * Orchestrates the multi-step scanning process using Gemini API directly
+ *
+ * This module orchestrates the complete security scanning process for GitHub repositories.
+ * It coordinates multiple steps: fetching repository content, analyzing for security risks,
+ * and calculating an overall safety level.
+ *
+ * Workflow Steps:
+ * 1. Fetch repository content via GitHub API (no LLM needed)
+ * 2. Analyze files for security risks using Gemini AI (batch processing)
+ * 3. Calculate safety level and generate summary using Gemini AI
+ *
+ * Key Features:
+ * - Batch processing: Analyzes files in configurable batches to manage API rate limits
+ * - Rate limit handling: Automatically respects Gemini API rate limits
+ * - Comprehensive analysis: Detects malicious code, suspicious dependencies, and security threats
+ * - Prioritized scanning: Focuses on security-relevant files (package.json, scripts, executables)
+ * - Debug output: Saves scan results to disk in development for debugging
+ *
+ * @module lib/ai/gemini/scan-workflow
  */
 
 import { GeminiService, SchemaType } from "./gemini-service";
@@ -26,11 +43,40 @@ import type {
 } from "@/types/scan";
 import type { PackageJson, GitHubRepoMetadata, GitHubTreeItem } from "@/types/github";
 
+/**
+ * Main workflow orchestrator for repository security scanning
+ *
+ * Coordinates the multi-step process of analyzing GitHub repositories for security threats.
+ * Uses Gemini AI for intelligent analysis and GitHub API for repository content retrieval.
+ *
+ * @class GeminiScanWorkflow
+ *
+ * @example
+ * ```typescript
+ * const workflow = new GeminiScanWorkflow({
+ *   geminiApiKey: process.env.GEMINI_API_KEY,
+ *   githubToken: process.env.GITHUB_TOKEN,
+ *   geminiModel: 'gemini-2.5-flash-lite'
+ * });
+ *
+ * const result = await workflow.scanRepository('https://github.com/facebook/react');
+ * console.log(result.safetyLevel); // "safe", "caution", or "unsafe"
+ * console.log(result.findings); // Detailed security findings
+ * ```
+ */
 export class GeminiScanWorkflow {
   private geminiService: GeminiService;
   private githubClient: GitHubClient;
   private config: GeminiWorkflowConfig;
 
+  /**
+   * Creates a new scan workflow instance
+   *
+   * @param config - Configuration for the workflow
+   * @param config.geminiApiKey - Google Gemini API key
+   * @param config.githubToken - GitHub personal access token (optional, for higher rate limits)
+   * @param config.geminiModel - Gemini model to use (default: 'gemini-2.5-flash-lite')
+   */
   constructor(config: GeminiWorkflowConfig) {
     this.config = config;
     this.geminiService = new GeminiService({
@@ -41,8 +87,26 @@ export class GeminiScanWorkflow {
   }
 
   /**
-   * Helper: Save scan findings to disk for debugging/comparison
-   * Only writes files in development/testing environments
+   * Saves scan findings to disk for debugging and analysis
+   *
+   * Creates a timestamped directory in `scan_results/` and saves findings as JSON.
+   * Only active in non-production environments for development debugging.
+   *
+   * @param repoUrl - GitHub repository URL being scanned
+   * @param findings - Findings data to save (any JSON-serializable object)
+   * @param filename - Name of the file to save (e.g., "step-2-findings.json")
+   * @param existingFolderPath - Optional existing folder path to use instead of creating new one
+   * @returns Path to the saved file, or empty string if skipped (production)
+   *
+   * @example
+   * ```typescript
+   * const path = this.saveScanFindings(
+   *   'https://github.com/facebook/react',
+   *   findings,
+   *   'final-scan-result.json'
+   * );
+   * // => "scan_results/2025-01-19T12-30-00-000Z_facebook-react/final-scan-result.json"
+   * ```
    */
   private saveScanFindings(
     repoUrl: string,
@@ -83,7 +147,26 @@ export class GeminiScanWorkflow {
   }
 
   /**
-   * Execute the full repository scan workflow
+   * Executes the complete security scan workflow for a GitHub repository
+   *
+   * This is the main entry point for scanning. It orchestrates all three steps:
+   * 1. Fetches repository content and metadata from GitHub
+   * 2. Analyzes files in batches using Gemini AI to detect security risks
+   * 3. Calculates overall safety level and generates an AI summary
+   *
+   * @param repoUrl - Full GitHub repository URL (e.g., "https://github.com/facebook/react")
+   * @returns Promise resolving to complete scan result with findings and safety assessment
+   * @throws {Error} If GitHub API fails, repository not found, or Gemini API errors occur
+   *
+   * @example
+   * ```typescript
+   * const workflow = new GeminiScanWorkflow(config);
+   * const result = await workflow.scanRepository('https://github.com/facebook/react');
+   *
+   * console.log(result.safetyLevel); // "safe", "caution", or "unsafe"
+   * console.log(result.findings.maliciousCode.length); // Number of malicious code findings
+   * console.log(result.aiSummary); // AI-generated summary of security assessment
+   * ```
    */
   async scanRepository(repoUrl: string): Promise<ScanResult> {
     console.log(`\n🔍 Starting Gemini-based scan for: ${repoUrl}\n`);
@@ -146,7 +229,21 @@ export class GeminiScanWorkflow {
   }
 
   /**
-   * Parse package.json content and extract install scripts
+   * Parses package.json content and extracts install scripts
+   *
+   * Attempts to parse the package.json file and extract any install-time scripts
+   * that execute automatically during `npm install`. These are security-critical
+   * because they run without user intervention.
+   *
+   * @param packageJsonContent - Raw package.json file content (may be null, skipped, or invalid)
+   * @param log - Logging function for status messages
+   * @returns Object containing parsed package.json and array of install script commands
+   *
+   * @example
+   * ```typescript
+   * const { packageJson, installScripts } = this.parsePackageJson(content, console.log);
+   * // installScripts might be: ["node scripts/postinstall.js", "npm run setup"]
+   * ```
    */
   private parsePackageJson(
     packageJsonContent: string | null | undefined,
@@ -180,7 +277,19 @@ export class GeminiScanWorkflow {
   }
 
   /**
-   * Extract dependency information from package.json
+   * Extracts dependency lists from parsed package.json
+   *
+   * Converts the dependencies and devDependencies objects into formatted arrays
+   * for easier analysis and display.
+   *
+   * @param packageJson - Parsed package.json object (may be null if not found/invalid)
+   * @returns Object with production and dev dependency arrays
+   *
+   * @example
+   * ```typescript
+   * const deps = this.extractDependencies(packageJson);
+   * // => { production: ["react@18.2.0", "next@14.0.0"], dev: ["typescript@5.0.0"] }
+   * ```
    */
   private extractDependencies(packageJson: PackageJson | null): {
     production: string[];
@@ -201,7 +310,22 @@ export class GeminiScanWorkflow {
   }
 
   /**
-   * Step 1: Fetch repository content (GitHub API - no LLM)
+   * Step 1: Fetches repository content from GitHub (no LLM/AI involved)
+   *
+   * Retrieves repository metadata, file tree, and content of security-relevant files.
+   * Prioritizes files like package.json, scripts, and executables that are most likely
+   * to contain security threats.
+   *
+   * @param repoUrl - GitHub repository URL
+   * @returns Promise resolving to complete repository content data
+   * @throws {Error} If repository not found or GitHub API fails
+   *
+   * @example
+   * ```typescript
+   * const repoData = await this.fetchRepoContent('https://github.com/facebook/react');
+   * console.log(repoData.filesScanned); // Number of files analyzed
+   * console.log(repoData.dependencies.production.length); // Number of prod dependencies
+   * ```
    */
   private async fetchRepoContent(repoUrl: string): Promise<RepoContentData> {
     const log = (msg: string) => console.log(`   ${msg}`);
@@ -281,7 +405,15 @@ export class GeminiScanWorkflow {
   }
 
   /**
-   * Build the risk detection prompt for a batch of files
+   * Builds the Gemini prompt for analyzing a batch of files for security risks
+   *
+   * Creates a detailed prompt that instructs Gemini to focus on threats to open-source
+   * contributors (not end users), with specific severity rules and output format requirements.
+   *
+   * @param batch - Array of file paths to analyze in this batch
+   * @param batchNum - Batch number (for tracking in findings)
+   * @param repoData - Complete repository content data
+   * @returns Formatted prompt string for Gemini API
    */
   private buildRiskDetectionPrompt(
     batch: string[],
@@ -376,7 +508,12 @@ Return JSON in this exact format:
   }
 
   /**
-   * Create the JSON schema for risk detection response
+   * Creates the JSON schema for risk detection API response
+   *
+   * Defines the exact structure Gemini must follow when returning security findings.
+   * Enforces required fields and proper typing for downstream processing.
+   *
+   * @returns Gemini-compatible JSON schema object
    */
   private createRiskDetectionSchema(): GeminiSchema {
     const findingSchema = {
@@ -448,7 +585,13 @@ Return JSON in this exact format:
   }
 
   /**
-   * Merge findings from a batch into the aggregated findings
+   * Merges findings from a single batch into the aggregated findings collection
+   *
+   * Combines findings from each batch into a single comprehensive findings object.
+   * Handles both nested and flat findings structures for flexibility.
+   *
+   * @param allFindings - Accumulated findings object (modified in place)
+   * @param batchFindings - Findings from current batch to merge in
    */
   private mergeFindings(
     allFindings: Findings,
@@ -478,7 +621,18 @@ Return JSON in this exact format:
   }
 
   /**
-   * Process a single batch of files for risk detection
+   * Processes a single batch of files for risk detection using Gemini AI
+   *
+   * Analyzes a subset of files (determined by SCAN_BATCH_SIZE constant) for security threats.
+   * Handles Gemini API calls, error handling, and timing metrics.
+   *
+   * @param batch - Array of file paths to analyze in this batch
+   * @param batchNum - Current batch number (for logging and tracking)
+   * @param totalBatches - Total number of batches (for progress reporting)
+   * @param repoData - Complete repository content data
+   * @param scanStartTime - Scan start timestamp (for duration calculation)
+   * @param log - Logging function for status messages
+   * @returns Promise resolving to findings from this batch, or null if batch failed
    */
   private async processBatch(
     batch: string[],
@@ -539,7 +693,22 @@ Return JSON in this exact format:
   }
 
   /**
-   * Step 2: Detect security risks using Gemini
+   * Step 2: Detects security risks across all repository files using Gemini AI
+   *
+   * Divides files into batches and processes each batch sequentially through Gemini.
+   * Aggregates findings from all batches into a comprehensive security report.
+   * Automatically handles rate limiting between API calls.
+   *
+   * @param repoData - Complete repository content data from Step 1
+   * @param repoUrl - GitHub repository URL (for result file naming)
+   * @returns Promise resolving to aggregated findings and scan folder path
+   * @throws {Error} If all batches fail (partial failures are tolerated)
+   *
+   * @example
+   * ```typescript
+   * const { findings, scanFolderPath } = await this.detectRisks(repoData, repoUrl);
+   * console.log(findings.maliciousCode.length); // Number of malicious code findings
+   * ```
    */
   private async detectRisks(
     repoData: RepoContentData,
@@ -622,7 +791,14 @@ Return JSON in this exact format:
   }
 
   /**
-   * Build the safety level analysis prompt
+   * Builds the Gemini prompt for calculating safety level and generating summary
+   *
+   * Creates a prompt that analyzes all findings and determines whether the repository
+   * is safe, requires caution, or is unsafe for contributors to use.
+   *
+   * @param findings - Aggregated security findings from Step 2
+   * @param repoMetadata - Repository metadata (owner, name, stars, etc.)
+   * @returns Formatted prompt string for Gemini API
    */
   private buildSafetyLevelPrompt(
     findings: Findings,
@@ -664,7 +840,12 @@ Return JSON in this exact format:
   }
 
   /**
-   * Create the JSON schema for safety level response
+   * Creates the JSON schema for safety level API response
+   *
+   * Defines the structure Gemini must follow when returning the safety assessment.
+   * Includes safety level and AI-generated summary.
+   *
+   * @returns Gemini-compatible JSON schema object
    */
   private createSafetyLevelSchema(): GeminiSchema {
     return {
@@ -684,7 +865,24 @@ Return JSON in this exact format:
   }
 
   /**
-   * Step 3: Calculate safety level and generate summary using Gemini
+   * Step 3: Calculates overall safety level and generates AI summary
+   *
+   * Analyzes all security findings to determine if the repository is safe for contributors.
+   * Generates a human-readable summary explaining the security assessment.
+   *
+   * @param findings - Aggregated security findings from Step 2
+   * @param repoUrl - GitHub repository URL (for result file naming)
+   * @param repoMetadata - Repository metadata for context
+   * @param existingFolderPath - Scan results folder path from Step 2
+   * @returns Promise resolving to safety level, AI summary, and scan folder path
+   * @throws {Error} If Gemini API call fails
+   *
+   * @example
+   * ```typescript
+   * const result = await this.calculateSafetyLevel(findings, repoUrl, metadata, folderPath);
+   * console.log(result.safetyLevel); // "safe", "caution", or "unsafe"
+   * console.log(result.aiSummary); // "This repository appears safe for contributors..."
+   * ```
    */
   private async calculateSafetyLevel(
     findings: Findings,

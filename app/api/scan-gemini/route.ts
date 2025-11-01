@@ -1,6 +1,57 @@
 /**
  * API Route: POST /api/scan-gemini
- * Scans a repository for security vulnerabilities using Gemini API
+ *
+ * Orchestrates the complete security scanning workflow for a GitHub repository.
+ * This is the main API endpoint for initiating repository security scans.
+ *
+ * Workflow:
+ * 1. Authenticates user via Auth0
+ * 2. Validates and sanitizes repository URL
+ * 3. Checks for cached results (if repo unchanged since last scan)
+ * 4. Determines scan strategy (trusted by stars or full AI scan)
+ * 5. Executes scan using Gemini AI
+ * 6. Saves results to database
+ * 7. Returns scan results to client
+ *
+ * Request Body:
+ * ```json
+ * {
+ *   "repoUrl": "https://github.com/owner/repository"
+ * }
+ * ```
+ *
+ * Response Format (ScanResult):
+ * ```json
+ * {
+ *   "repoUrl": "https://github.com/owner/repo",
+ *   "repoMetadata": { "owner": "...", "name": "...", "stars": 0, ... },
+ *   "safetyLevel": "safe" | "caution" | "unsafe",
+ *   "findings": {
+ *     "maliciousCode": [...],
+ *     "dependencies": [...],
+ *     "networkActivity": [...],
+ *     "fileSystemSafety": [...],
+ *     "credentialSafety": [...]
+ *   },
+ *   "aiSummary": "AI-generated summary",
+ *   "scannedAt": "ISO timestamp",
+ *   "validated": true,
+ *   "unchangedSinceLastScan": false // optional flag
+ * }
+ * ```
+ *
+ * Optimization Flags (Environment Variables):
+ * - ENABLE_STAR_THRESHOLD_CHECK: Skip AI scan for repos with 1000+ stars (default: true)
+ * - ENABLE_UNCHANGED_REPO_CHECK: Return cached results for unchanged repos (default: true)
+ *
+ * Error Responses:
+ * - 400: Invalid request (bad URL, validation error)
+ * - 401: Unauthorized (not logged in)
+ * - 500: Server error (API key missing, database error, scan failed)
+ *
+ * @route POST /api/scan-gemini
+ * @access Protected (requires Auth0 authentication)
+ * @module app/api/scan-gemini
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -19,6 +70,29 @@ import {
   saveScanResults,
 } from "@/lib/scan/scan-helpers";
 
+/**
+ * POST handler for repository security scanning
+ *
+ * Thin HTTP handler that orchestrates the scan workflow by delegating to
+ * service layer functions in lib/scan/scan-helpers.ts. Handles authentication,
+ * validation, and HTTP-specific concerns only.
+ *
+ * @param request - Next.js request object with JSON body containing repoUrl
+ * @returns JSON response with scan results or error
+ * @throws Never throws - all errors are caught and returned as JSON responses
+ *
+ * @example
+ * ```typescript
+ * // Client-side usage
+ * const response = await fetch('/api/scan-gemini', {
+ *   method: 'POST',
+ *   headers: { 'Content-Type': 'application/json' },
+ *   body: JSON.stringify({ repoUrl: 'https://github.com/facebook/react' })
+ * });
+ * const result = await response.json();
+ * console.log(result.safetyLevel); // "safe" | "caution" | "unsafe"
+ * ```
+ */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     // Check authentication
@@ -140,7 +214,23 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 }
 
-// Optional: GET endpoint to check API status
+/**
+ * GET handler for API status and information
+ *
+ * Returns metadata about the scanning API including provider, rate limits,
+ * and available endpoints. Useful for health checks and API documentation.
+ *
+ * @returns JSON response with API status and metadata
+ *
+ * @example
+ * ```typescript
+ * // Check API status
+ * const response = await fetch('/api/scan-gemini');
+ * const info = await response.json();
+ * console.log(info.status); // "online"
+ * console.log(info.rateLimits.free); // "10 requests/minute, 250 requests/day"
+ * ```
+ */
 export async function GET(): Promise<NextResponse> {
   return NextResponse.json(
     {

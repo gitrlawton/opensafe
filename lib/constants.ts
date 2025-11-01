@@ -1,6 +1,22 @@
 /**
- * Application-wide constants
- * Centralizes magic numbers and configuration values
+ * Application-Wide Constants
+ *
+ * This module centralizes all magic numbers, configuration values, and thresholds
+ * used throughout the application. Prevents code duplication and makes tuning easier.
+ *
+ * Categories:
+ * - Time Constants: Conversions and display thresholds
+ * - Gemini API Constants: Model settings, rate limits, token budgets
+ * - Scan Workflow Constants: Batch sizes, trust thresholds
+ * - URL Query Parameters: Standardized query param keys
+ * - Time Display Constants: Formatting thresholds for relative time
+ *
+ * Best Practices:
+ * - All constants are exported for easy imports
+ * - Each constant includes inline documentation
+ * - Organized by logical grouping with visual section separators
+ *
+ * @module lib/constants
  */
 
 // ============================================================================

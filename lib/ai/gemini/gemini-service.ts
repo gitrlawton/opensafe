@@ -1,5 +1,23 @@
 /**
- * Gemini Service - Handles communication with Google Gemini API
+ * Gemini Service - Google Gemini API Client
+ *
+ * This module provides a robust client for interacting with Google's Gemini AI API.
+ * Handles rate limiting, retries, error recovery, and JSON response parsing.
+ *
+ * Key Features:
+ * - Automatic rate limiting: Enforces minimum interval between requests
+ * - Smart retries: Exponential backoff for rate limit errors (429), standard retry for others
+ * - JSON parsing: Multiple fallback strategies to extract JSON from various response formats
+ * - Structured output: Support for JSON schema-based responses
+ * - Thinking budget: Configurable reasoning depth for Gemini 2.5 models
+ * - Token tracking: Logs prompt, completion, and total token usage
+ *
+ * Rate Limiting Strategy:
+ * - Minimum interval between requests (default: 1 second)
+ * - Exponential backoff on 429 errors: 10s, 20s, 40s
+ * - Configurable max retries (default: 3)
+ *
+ * @module lib/ai/gemini/gemini-service
  */
 
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
@@ -19,19 +37,62 @@ import type { GeminiServiceConfig, GeminiSchema } from "@/types/scan";
 // Re-export SchemaType for use in workflow
 export { SchemaType };
 
+/**
+ * Low-level client for Google Gemini API
+ *
+ * Provides rate-limited, retry-enabled access to Gemini models with automatic
+ * error handling and response parsing.
+ *
+ * @class GeminiService
+ *
+ * @example
+ * ```typescript
+ * const service = new GeminiService({
+ *   apiKey: process.env.GEMINI_API_KEY,
+ *   model: 'gemini-2.5-flash-lite'
+ * });
+ *
+ * // Simple text generation
+ * const text = await service.callGemini('Explain quantum computing');
+ *
+ * // JSON response with schema
+ * const result = await service.callGeminiJSON<{ answer: string }>(
+ *   'What is 2+2? Return JSON with "answer" field',
+ *   { responseSchema: mySchema }
+ * );
+ * ```
+ */
 export class GeminiService {
   private genAI: GoogleGenerativeAI;
   private model: string;
   private lastRequestTime: number = 0;
   private minRequestInterval: number = GEMINI_MIN_REQUEST_INTERVAL_MS;
 
+  /**
+   * Creates a new Gemini API client
+   *
+   * @param config - Configuration for the Gemini service
+   * @param config.apiKey - Google Gemini API key
+   * @param config.model - Optional model name (default: 'gemini-2.5-flash-lite')
+   */
   constructor(config: GeminiServiceConfig) {
     this.genAI = new GoogleGenerativeAI(config.apiKey);
     this.model = config.model || DEFAULT_GEMINI_MODEL;
   }
 
   /**
-   * Enforce rate limiting - wait if needed
+   * Enforces rate limiting by waiting if necessary
+   *
+   * Ensures minimum time interval between API requests to comply with rate limits.
+   * Automatically calculates and applies wait time if called too soon after last request.
+   *
+   * @returns Promise that resolves after any required wait time
+   *
+   * @example
+   * ```typescript
+   * await this.enforceRateLimit(); // Waits if needed
+   * // Now safe to make API call
+   * ```
    */
   private async enforceRateLimit(): Promise<void> {
     const now = Date.now();
@@ -49,8 +110,36 @@ export class GeminiService {
   }
 
   /**
-   * Call Gemini API with a prompt
-   * Includes automatic rate limiting and retry logic
+   * Calls the Gemini API with a text prompt
+   *
+   * Main method for interacting with Gemini. Includes automatic rate limiting,
+   * retry logic with exponential backoff, and comprehensive error handling.
+   *
+   * @param prompt - Text prompt to send to Gemini
+   * @param options - Optional configuration for the API call
+   * @param options.temperature - Sampling temperature (0-2, default: 1.0). Lower = more deterministic
+   * @param options.maxTokens - Maximum output tokens (default: 65536 for Gemini 2.5 Flash Lite)
+   * @param options.thinkingBudget - Token budget for reasoning (Gemini 2.5 feature). Set to 0 to disable
+   * @param options.maxRetries - Maximum retry attempts (default: 3)
+   * @param options.responseSchema - JSON schema for structured output (forces JSON response)
+   * @returns Promise resolving to the text response from Gemini
+   * @throws {Error} If all retry attempts fail or response is blocked/empty
+   *
+   * @example
+   * ```typescript
+   * // Simple text generation
+   * const response = await service.callGemini('Explain quantum computing in simple terms');
+   *
+   * // With structured JSON output
+   * const jsonResponse = await service.callGemini(
+   *   'Analyze this code for security issues',
+   *   {
+   *     temperature: 0.7,
+   *     thinkingBudget: 5000,
+   *     responseSchema: myJsonSchema
+   *   }
+   * );
+   * ```
    */
   async callGemini(
     prompt: string,
@@ -177,7 +266,40 @@ export class GeminiService {
   }
 
   /**
-   * Call Gemini API and parse JSON response
+   * Calls Gemini API and parses the response as JSON
+   *
+   * Convenience wrapper around callGemini that automatically extracts and parses JSON
+   * from the response. Uses multiple fallback strategies to handle various JSON formats:
+   * 1. Parse as pure JSON (if responseSchema provided)
+   * 2. Extract from markdown code blocks (```json ... ```)
+   * 3. Parse entire response as JSON
+   * 4. Extract JSON object with non-greedy matching
+   * 5. Extract JSON object with greedy matching
+   *
+   * @template T - Type of the expected JSON response
+   * @param prompt - Text prompt to send to Gemini
+   * @param options - Optional configuration for the API call
+   * @param options.temperature - Sampling temperature (0-2, default: 1.0)
+   * @param options.maxTokens - Maximum output tokens
+   * @param options.thinkingBudget - Token budget for reasoning (Gemini 2.5 feature)
+   * @param options.responseSchema - JSON schema for structured output (recommended for reliable JSON)
+   * @returns Promise resolving to parsed JSON object
+   * @throws {Error} If JSON extraction fails with all strategies
+   *
+   * @example
+   * ```typescript
+   * interface SecurityAnalysis {
+   *   safetyLevel: 'safe' | 'caution' | 'unsafe';
+   *   findings: string[];
+   * }
+   *
+   * const result = await service.callGeminiJSON<SecurityAnalysis>(
+   *   'Analyze this code for security: ...',
+   *   { responseSchema: securitySchema }
+   * );
+   *
+   * console.log(result.safetyLevel); // Type-safe!
+   * ```
    */
   async callGeminiJSON<T = any>(
     prompt: string,
@@ -263,7 +385,22 @@ export class GeminiService {
   }
 
   /**
-   * Get current rate limit info
+   * Gets current rate limit configuration information
+   *
+   * Returns the calculated requests-per-minute (RPM) and minimum interval
+   * between requests based on the configured rate limit settings.
+   *
+   * @returns Object containing rate limit metrics
+   * @returns rpm - Maximum requests per minute
+   * @returns minIntervalSeconds - Minimum seconds between requests
+   *
+   * @example
+   * ```typescript
+   * const info = service.getRateLimitInfo();
+   * console.log(`Rate limit: ${info.rpm} requests/minute`);
+   * console.log(`Min interval: ${info.minIntervalSeconds} seconds`);
+   * // Example output: "Rate limit: 60 requests/minute, Min interval: 1 seconds"
+   * ```
    */
   getRateLimitInfo(): { rpm: number; minIntervalSeconds: number } {
     return {

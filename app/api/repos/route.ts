@@ -1,6 +1,37 @@
 /**
  * API Route: GET /api/repos
- * Fetches scanned repositories from Snowflake
+ *
+ * Fetches a list of scanned repositories from the database.
+ * Returns repository metadata including safety scores and last scan timestamps.
+ *
+ * Query Parameters:
+ * - `limit` (optional): Number of repos to return (max: 100, default: 100)
+ * - `offset` (optional): Pagination offset (not currently implemented in DB query)
+ * - `owner` (optional): Filter by repository owner (not currently implemented)
+ * - `language` (optional): Filter by programming language (not currently implemented)
+ *
+ * Response Format:
+ * ```json
+ * [
+ *   {
+ *     "id": "unique-id",
+ *     "name": "repository-name",
+ *     "owner": "owner-username",
+ *     "language": "JavaScript",
+ *     "safetyScore": "SAFE" | "CAUTION" | "UNSAFE",
+ *     "lastScanned": "2 hours ago",
+ *     "scannedBy": "user@example.com"
+ *   }
+ * ]
+ * ```
+ *
+ * Error Responses:
+ * - 400: Invalid query parameters (validation error with details)
+ * - 500: Database query failed
+ *
+ * @route GET /api/repos
+ * @access Public (no authentication required)
+ * @module app/api/repos
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -14,6 +45,28 @@ import {
   sanitizeString,
 } from "@/lib/validations/api";
 
+/**
+ * GET handler for fetching scanned repositories
+ *
+ * Retrieves a paginated list of repositories that have been scanned,
+ * including their safety scores and scan metadata. All data is sanitized
+ * before being sent to the client.
+ *
+ * @param request - Next.js request object with query parameters
+ * @returns JSON response with array of repository objects or error
+ *
+ * @example
+ * ```typescript
+ * // Fetch default 100 repos
+ * fetch('/api/repos')
+ *
+ * // Fetch 10 repos
+ * fetch('/api/repos?limit=10')
+ *
+ * // Filter by language (not yet implemented in DB query)
+ * fetch('/api/repos?language=JavaScript')
+ * ```
+ */
 export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     // Parse and validate query parameters

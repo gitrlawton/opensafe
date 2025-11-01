@@ -1,6 +1,20 @@
 /**
  * Scan Helper Functions
- * Extracted business logic from scan API route for better modularity
+ *
+ * This module contains the core business logic for repository security scanning.
+ * Extracted from API routes for better testability, reusability, and separation of concerns.
+ *
+ * Key Responsibilities:
+ * - Fetching repository context and previous scan data
+ * - Determining scan strategy (cached, trusted, or full scan)
+ * - Executing AI-powered security analysis
+ * - Saving scan results to database
+ *
+ * Optimization Features:
+ * - Returns cached results for unchanged repositories (configurable via ENABLE_UNCHANGED_REPO_CHECK)
+ * - Skips AI scans for highly-starred repos (configurable via ENABLE_STAR_THRESHOLD_CHECK)
+ *
+ * @module lib/scan/scan-helpers
  */
 
 import { GitHubClient } from "@/lib/github/client";

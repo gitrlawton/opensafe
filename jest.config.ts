@@ -37,7 +37,7 @@ const config: Config = {
     '!**/coverage/**',
     '!**/jest.config.ts',
   ],
-  coverageThresholds: {
+  coverageThreshold: {
     global: {
       branches: 0,
       functions: 0,

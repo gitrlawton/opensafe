@@ -1,0 +1,46 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.*
+.yarn
+
+# Testing
+coverage
+
+# Next.js
+.next
+out
+build
+
+# Misc
+.DS_Store
+*.pem
+.internal_docs
+.claude
+scan_results
+
+# Scripts (excluded from git)
+scripts
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+snowflake.log
+
+# Environment files
+.env
+.env.local
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml

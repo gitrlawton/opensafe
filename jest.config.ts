@@ -23,10 +23,7 @@ const config: Config = {
     // Handle module aliases (this will be automatically configured for tsconfig.json paths)
     '^@/(.*)$': '<rootDir>/$1',
   },
-  testMatch: [
-    '**/__tests__/**/*.{ts,tsx}',
-    '**/*.{spec,test}.{ts,tsx}',
-  ],
+  testMatch: ['**/__tests__/**/*.{ts,tsx}', '**/*.{spec,test}.{ts,tsx}'],
   collectCoverageFrom: [
     'app/**/*.{ts,tsx}',
     'lib/**/*.{ts,tsx}',

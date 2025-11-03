@@ -1,4 +1,4 @@
-import { Star } from "lucide-react";
+import { Star } from 'lucide-react';
 
 /**
  * Displays an informational callout for repositories trusted by star count

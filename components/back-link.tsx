@@ -2,9 +2,9 @@
  * BackLink - Consistent back navigation link
  */
 
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
-import { cn } from "@/lib/utils";
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface BackLinkProps {
   href: string;
@@ -12,12 +12,16 @@ interface BackLinkProps {
   className?: string;
 }
 
-export function BackLink({ href, label = "Back", className }: BackLinkProps): JSX.Element {
+export function BackLink({
+  href,
+  label = 'Back',
+  className,
+}: BackLinkProps): JSX.Element {
   return (
     <Link
       href={href}
       className={cn(
-        "inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors",
+        'inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors',
         className
       )}
     >

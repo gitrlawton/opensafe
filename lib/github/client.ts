@@ -28,7 +28,7 @@ import type {
   ParsedGitHubUrl,
   GitHubTreeItem,
   PackageJson,
-} from "@/types/github";
+} from '@/types/github';
 
 /**
  * Client for interacting with GitHub's REST API
@@ -69,7 +69,7 @@ export class GitHubClient {
    */
   private get headers(): Record<string, string> {
     const headers: Record<string, string> = {
-      Accept: "application/vnd.github.v3+json",
+      Accept: 'application/vnd.github.v3+json',
     };
 
     if (this.token) {
@@ -105,7 +105,7 @@ export class GitHubClient {
 
     return {
       owner: match[1],
-      repo: match[2].replace(/\.git$/, ""),
+      repo: match[2].replace(/\.git$/, ''),
     };
   }
 
@@ -152,8 +152,8 @@ export class GitHubClient {
     return {
       owner: data.owner.login,
       name: data.name,
-      defaultBranch: data.default_branch || "main",
-      language: data.language || "Unknown",
+      defaultBranch: data.default_branch || 'main',
+      language: data.language || 'Unknown',
       description: data.description || undefined,
       stars: data.stargazers_count || 0,
       lastPushedAt: data.pushed_at || undefined,
@@ -246,7 +246,7 @@ export class GitHubClient {
       }
 
       const data = await response.json();
-      const content = Buffer.from(data.content, "base64").toString("utf-8");
+      const content = Buffer.from(data.content, 'base64').toString('utf-8');
       onProgress?.(`✅ package.json loaded`);
 
       return JSON.parse(content);
@@ -308,7 +308,7 @@ export class GitHubClient {
         return null;
       }
 
-      const content = Buffer.from(data.content, "base64").toString("utf-8");
+      const content = Buffer.from(data.content, 'base64').toString('utf-8');
       onProgress?.(`✅ Loaded ${path} (${data.size} bytes)`);
 
       return content;
@@ -343,12 +343,12 @@ export class GitHubClient {
 
     const scripts = packageJson.scripts;
     const installScriptKeys = [
-      "preinstall",
-      "install",
-      "postinstall",
-      "prepare",
-      "prepublish",
-      "prepublishOnly",
+      'preinstall',
+      'install',
+      'postinstall',
+      'prepare',
+      'prepublish',
+      'prepublishOnly',
     ];
 
     return installScriptKeys
@@ -377,17 +377,17 @@ export class GitHubClient {
    */
   findExecutableFiles(tree: GitHubTreeItem[]): string[] {
     const executableExtensions = [
-      ".exe",
-      ".sh",
-      ".bat",
-      ".bin",
-      ".cmd",
-      ".ps1",
+      '.exe',
+      '.sh',
+      '.bat',
+      '.bin',
+      '.cmd',
+      '.ps1',
     ];
 
     return tree
       .filter((item: GitHubTreeItem) => {
-        if (item.type !== "blob") return false;
+        if (item.type !== 'blob') return false;
         return executableExtensions.some((ext) => item.path.endsWith(ext));
       })
       .map((item: GitHubTreeItem) => item.path);
@@ -460,7 +460,7 @@ export class GitHubClient {
     ];
 
     tree.forEach((item: GitHubTreeItem) => {
-      if (item.type !== "blob") return;
+      if (item.type !== 'blob') return;
 
       const path = item.path;
       let priority: 1 | 2 | 3 | 4 | 5 = 5; // Default low priority
@@ -538,11 +538,11 @@ export class GitHubClient {
 
       // Skip large lock files - we only need package.json for dependencies
       if (
-        filePath.includes("package-lock.json") ||
-        filePath.includes("yarn.lock") ||
-        filePath.includes("pnpm-lock.yaml")
+        filePath.includes('package-lock.json') ||
+        filePath.includes('yarn.lock') ||
+        filePath.includes('pnpm-lock.yaml')
       ) {
-        scannedFiles.set(filePath, "[Skipped - lock file]");
+        scannedFiles.set(filePath, '[Skipped - lock file]');
         continue;
       }
 
@@ -568,7 +568,7 @@ export class GitHubClient {
           continue;
         }
 
-        let content = Buffer.from(data.content, "base64").toString("utf-8");
+        let content = Buffer.from(data.content, 'base64').toString('utf-8');
 
         scannedFiles.set(filePath, content);
       } catch (error) {

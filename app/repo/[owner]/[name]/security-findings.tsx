@@ -1,12 +1,12 @@
-import type { Finding } from "@/types/scan";
+import type { Finding } from '@/types/scan';
 import {
   getSeverityBorderColor,
   getSeverityBadgeColor,
   getCategoryTitle,
   mapSeverityToUIType,
   type UISeverity,
-} from "@/lib/ui-helpers";
-import { SeverityIcon } from "@/lib/ui-components";
+} from '@/lib/ui-helpers';
+import { SeverityIcon } from '@/lib/ui-components';
 
 interface SecurityCategoryProps {
   categoryKey: string;
@@ -61,8 +61,8 @@ function CategoryWithFindings({
   const findingsCount = findings.length;
 
   // Determine the most severe level in this category
-  const hasSevere = findings.some((f) => f.severity === "severe");
-  const categoryType: UISeverity = hasSevere ? "danger" : "warning";
+  const hasSevere = findings.some((f) => f.severity === 'severe');
+  const categoryType: UISeverity = hasSevere ? 'danger' : 'warning';
 
   return (
     <div className="space-y-3">
@@ -82,12 +82,12 @@ function CategoryWithFindings({
           </h4>
           <p className="text-sm text-muted-foreground">
             {findingsCount} issue
-            {findingsCount > 1 ? "s" : ""} detected
+            {findingsCount > 1 ? 's' : ''} detected
           </p>
         </div>
       </div>
       {findings.map((finding, index) => {
-        const type = mapSeverityToUIType(finding.severity || "moderate");
+        const type = mapSeverityToUIType(finding.severity || 'moderate');
         return <FindingCard key={index} finding={finding} type={type} />;
       })}
     </div>
@@ -103,7 +103,7 @@ function CategorySuccess({
 }: SecurityCategoryProps): JSX.Element {
   return (
     <div
-      className={`flex gap-3 p-4 rounded-lg border-l-4 bg-muted/30 ${getSeverityBorderColor("success")}`}
+      className={`flex gap-3 p-4 rounded-lg border-l-4 bg-muted/30 ${getSeverityBorderColor('success')}`}
     >
       <div className="flex-shrink-0 mt-0.5">
         <SeverityIcon type="success" />

@@ -54,21 +54,21 @@
  * @module app/api/scan-gemini
  */
 
-import { NextRequest, NextResponse } from "next/server";
-import { ZodError } from "zod";
-import { auth0 } from "@/lib/auth0";
-import { parseGitHubUrl, createApiError, logError } from "@/lib/utils";
+import { NextRequest, NextResponse } from 'next/server';
+import { ZodError } from 'zod';
+import { auth0 } from '@/lib/auth0';
+import { parseGitHubUrl, createApiError, logError } from '@/lib/utils';
 import {
   scanRequestSchema,
   validateAndSanitize,
   createValidationError,
-} from "@/lib/validations/api";
+} from '@/lib/validations/api';
 import {
   fetchRepoScanContext,
   getCachedScanIfUnchanged,
   executeScanStrategy,
   saveScanResults,
-} from "@/lib/scan/scan-helpers";
+} from '@/lib/scan/scan-helpers';
 
 /**
  * POST handler for repository security scanning
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const session = await auth0.getSession();
     if (!session?.user) {
       return NextResponse.json(
-        { error: "Unauthorized - Please log in" },
+        { error: 'Unauthorized - Please log in' },
         { status: 401 }
       );
     }
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Validate user session has required fields
     if (!session.user.email && !session.user.name) {
       return NextResponse.json(
-        { error: "Invalid user session - missing user identifier" },
+        { error: 'Invalid user session - missing user identifier' },
         { status: 400 }
       );
     }
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       body = await request.json();
     } catch (error) {
       return NextResponse.json(
-        { error: "Invalid JSON in request body" },
+        { error: 'Invalid JSON in request body' },
         { status: 400 }
       );
     }
@@ -132,7 +132,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         return NextResponse.json(createValidationError(error), { status: 400 });
       }
       return NextResponse.json(
-        { error: "Invalid request data" },
+        { error: 'Invalid request data' },
         { status: 400 }
       );
     }
@@ -148,7 +148,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       cleanRepoName = parsed.repo;
     } catch (error) {
       return NextResponse.json(
-        createApiError("Invalid GitHub repository URL"),
+        createApiError('Invalid GitHub repository URL'),
         { status: 400 }
       );
     }
@@ -160,8 +160,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     if (!geminiApiKey) {
       return NextResponse.json(
         {
-          error: "Server configuration error",
-          details: "Missing GEMINI_API_KEY environment variable",
+          error: 'Server configuration error',
+          details: 'Missing GEMINI_API_KEY environment variable',
         },
         { status: 500 }
       );
@@ -176,9 +176,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         githubToken
       );
     } catch (error) {
-      logError("[API]", "Failed to fetch repository metadata", error);
+      logError('[API]', 'Failed to fetch repository metadata', error);
       return NextResponse.json(
-        createApiError("Failed to fetch repository information"),
+        createApiError('Failed to fetch repository information'),
         { status: 400 }
       );
     }
@@ -202,15 +202,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       repoOwner,
       cleanRepoName,
       result,
-      session.user.email || session.user.name || "unknown"
+      session.user.email || session.user.name || 'unknown'
     );
 
     // Return results
     return NextResponse.json(result, { status: 200 });
   } catch (error) {
-    logError("[API]", "Scan error", error);
+    logError('[API]', 'Scan error', error);
 
-    return NextResponse.json(createApiError("Scan failed"), { status: 500 });
+    return NextResponse.json(createApiError('Scan failed'), { status: 500 });
   }
 }
 
@@ -234,16 +234,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 export async function GET(): Promise<NextResponse> {
   return NextResponse.json(
     {
-      status: "online",
-      message: "OpenSafe Repository Scanner API (Gemini-powered)",
-      provider: "Google Gemini API",
-      model: "gemini-2.5-flash-lite",
+      status: 'online',
+      message: 'OpenSafe Repository Scanner API (Gemini-powered)',
+      provider: 'Google Gemini API',
+      model: 'gemini-2.5-flash-lite',
       rateLimits: {
-        free: "10 requests/minute, 250 requests/day",
-        tokenLimit: "250,000 tokens/minute",
+        free: '10 requests/minute, 250 requests/day',
+        tokenLimit: '250,000 tokens/minute',
       },
       endpoints: {
-        scan: "POST /api/scan-gemini",
+        scan: 'POST /api/scan-gemini',
       },
     },
     { status: 200 }

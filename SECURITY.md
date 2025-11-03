@@ -58,35 +58,30 @@ If you're contributing to OpenSafe, please follow these security guidelines:
 ### Code Security
 
 1. **Never Commit Secrets**
-
    - Never commit API keys, passwords, tokens, or credentials
    - Use `.env` files for local development (already in `.gitignore`)
    - Use `.env.example` as a template with placeholder values
    - Check commits with `git diff --cached` before committing
 
 2. **Input Validation**
-
    - Always validate and sanitize user inputs
    - Use Zod schemas for runtime validation
    - Never trust data from external APIs without validation
    - Sanitize data before database queries to prevent injection
 
 3. **Authentication & Authorization**
-
    - Never bypass authentication checks
    - Always verify user permissions before sensitive operations
    - Use Auth0 middleware for protected routes
    - Don't expose sensitive endpoints without authentication
 
 4. **Dependencies**
-
    - Keep dependencies up to date
    - Review dependency changes in pull requests
    - Use `npm audit` to check for known vulnerabilities
    - Avoid dependencies with known security issues
 
 5. **API Keys & Rate Limiting**
-
    - Never expose API keys in client-side code
    - Keep all API calls server-side
    - Respect rate limits for external APIs (GitHub, Gemini)

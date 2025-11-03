@@ -17,8 +17,8 @@
  * @module middleware
  */
 
-import { NextRequest, NextResponse } from "next/server";
-import { auth0 } from "./lib/auth0";
+import { NextRequest, NextResponse } from 'next/server';
+import { auth0 } from './lib/auth0';
 
 /**
  * Global middleware function that handles authentication for all routes
@@ -37,13 +37,13 @@ export async function middleware(request: NextRequest) {
   try {
     return await auth0.middleware(request);
   } catch (error) {
-    console.error("Auth middleware error:", error);
+    console.error('Auth middleware error:', error);
 
     // Only handle session errors, not auth flow errors
-    if (error instanceof Error && error.message.includes("JWE")) {
+    if (error instanceof Error && error.message.includes('JWE')) {
       // If there's an invalid session cookie, clear it and continue
       const response = NextResponse.next();
-      response.cookies.delete("appSession");
+      response.cookies.delete('appSession');
       return response;
     }
 
@@ -60,6 +60,6 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico, sitemap.xml, robots.txt (metadata files)
      */
-    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
+    '/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)',
   ],
 };

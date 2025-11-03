@@ -20,8 +20,8 @@
  * @module lib/ai/gemini/gemini-service
  */
 
-import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
-import { sleep } from "@/lib/utils";
+import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
+import { sleep } from '@/lib/utils';
 import {
   DEFAULT_GEMINI_MODEL,
   GEMINI_MIN_REQUEST_INTERVAL_MS,
@@ -31,8 +31,8 @@ import {
   GEMINI_RATE_LIMIT_BASE_WAIT_MS,
   GEMINI_RETRY_WAIT_MS,
   MS_PER_MINUTE,
-} from "@/lib/constants";
-import type { GeminiServiceConfig, GeminiSchema } from "@/types/scan";
+} from '@/lib/constants';
+import type { GeminiServiceConfig, GeminiSchema } from '@/types/scan';
 
 // Re-export SchemaType for use in workflow
 export { SchemaType };
@@ -179,7 +179,7 @@ export class GeminiService {
             }),
             // Structured output configuration
             ...(options?.responseSchema && {
-              responseMimeType: "application/json",
+              responseMimeType: 'application/json',
               responseSchema: options.responseSchema,
             }),
           },
@@ -239,10 +239,11 @@ export class GeminiService {
 
         // Check if it's a rate limit error (429)
         if (
-          error.message?.includes("429") ||
-          error.message?.includes("RESOURCE_EXHAUSTED")
+          error.message?.includes('429') ||
+          error.message?.includes('RESOURCE_EXHAUSTED')
         ) {
-          const waitTime = Math.pow(2, attempt) * GEMINI_RATE_LIMIT_BASE_WAIT_MS; // 10s, 20s, 40s
+          const waitTime =
+            Math.pow(2, attempt) * GEMINI_RATE_LIMIT_BASE_WAIT_MS; // 10s, 20s, 40s
           console.log(
             `      🚫 Rate limited. Waiting ${waitTime / 1000}s before retry ${attempt + 1}/${maxRetries}...`
           );
@@ -330,7 +331,7 @@ export class GeminiService {
     if (codeBlockMatch) {
       try {
         const extracted = codeBlockMatch[1].trim();
-        if (extracted.startsWith("{") || extracted.startsWith("[")) {
+        if (extracted.startsWith('{') || extracted.startsWith('[')) {
           return JSON.parse(extracted);
         }
       } catch (error) {

@@ -1,9 +1,9 @@
-import { cn } from "@/lib/utils";
+import { cn } from '@/lib/utils';
 import {
   mapSafetyScoreToUIType,
   getSeverityBackgroundColor,
   getSafetyScoreLabel,
-} from "@/lib/ui-helpers";
+} from '@/lib/ui-helpers';
 
 interface SafetyBadgeProps {
   score: string | number; // Support both "SAFE"/"CAUTION"/"UNSAFE" and numeric scores
@@ -28,22 +28,22 @@ export function SafetyBadge({
 }: SafetyBadgeProps): JSX.Element {
   // Get the UI severity type based on score
   const uiType =
-    typeof score === "string"
+    typeof score === 'string'
       ? mapSafetyScoreToUIType(score)
       : score >= 90
-        ? "success"
+        ? 'success'
         : score >= 70
-          ? "warning"
-          : "danger";
+          ? 'warning'
+          : 'danger';
 
   const colorClasses = getSeverityBackgroundColor(uiType);
   const label = getSafetyScoreLabel(score).toUpperCase();
 
   return (
-    <div className={cn("inline-flex items-center gap-2", className)}>
+    <div className={cn('inline-flex items-center gap-2', className)}>
       <span
         className={cn(
-          "px-2.5 py-1 rounded-md text-xs font-medium border",
+          'px-2.5 py-1 rounded-md text-xs font-medium border',
           colorClasses
         )}
       >

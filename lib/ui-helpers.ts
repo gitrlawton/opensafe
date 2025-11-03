@@ -18,27 +18,27 @@
  * @module lib/ui-helpers
  */
 
-import type { FindingSeverity } from "@/types/scan";
+import type { FindingSeverity } from '@/types/scan';
 
 /**
  * Type for visual severity levels used in UI
  */
-export type UISeverity = "success" | "warning" | "danger" | "info";
+export type UISeverity = 'success' | 'warning' | 'danger' | 'info';
 
 /**
  * Icon type for UI severity
  */
-export type SeverityIconType = "check" | "alert" | "info";
+export type SeverityIconType = 'check' | 'alert' | 'info';
 
 /**
  * Security finding category keys
  */
 export type FindingCategoryKey =
-  | "maliciousCode"
-  | "dependencies"
-  | "networkActivity"
-  | "fileSystemSafety"
-  | "credentialSafety";
+  | 'maliciousCode'
+  | 'dependencies'
+  | 'networkActivity'
+  | 'fileSystemSafety'
+  | 'credentialSafety';
 
 /**
  * Maps finding severity to UI severity type
@@ -52,13 +52,13 @@ export type FindingCategoryKey =
  */
 export function mapSeverityToUIType(severity: FindingSeverity): UISeverity {
   switch (severity) {
-    case "severe":
-      return "danger";
-    case "moderate":
-    case "low":
-      return "warning";
+    case 'severe':
+      return 'danger';
+    case 'moderate':
+    case 'low':
+      return 'warning';
     default:
-      return "warning";
+      return 'warning';
   }
 }
 
@@ -73,13 +73,13 @@ export function mapSeverityToUIType(severity: FindingSeverity): UISeverity {
  */
 export function getSeverityIconType(type: UISeverity): SeverityIconType {
   switch (type) {
-    case "success":
-      return "check";
-    case "warning":
-    case "danger":
-      return "alert";
+    case 'success':
+      return 'check';
+    case 'warning':
+    case 'danger':
+      return 'alert';
     default:
-      return "info";
+      return 'info';
   }
 }
 
@@ -94,14 +94,14 @@ export function getSeverityIconType(type: UISeverity): SeverityIconType {
  */
 export function getSeverityIconColor(type: UISeverity): string {
   switch (type) {
-    case "success":
-      return "text-success";
-    case "warning":
-      return "text-warning";
-    case "danger":
-      return "text-danger";
+    case 'success':
+      return 'text-success';
+    case 'warning':
+      return 'text-warning';
+    case 'danger':
+      return 'text-danger';
     default:
-      return "text-primary";
+      return 'text-primary';
   }
 }
 
@@ -115,14 +115,14 @@ export function getSeverityIconColor(type: UISeverity): string {
  */
 export function getSeverityBorderColor(type: UISeverity): string {
   switch (type) {
-    case "success":
-      return "border-l-success";
-    case "warning":
-      return "border-l-warning";
-    case "danger":
-      return "border-l-danger";
+    case 'success':
+      return 'border-l-success';
+    case 'warning':
+      return 'border-l-warning';
+    case 'danger':
+      return 'border-l-danger';
     default:
-      return "border-l-primary";
+      return 'border-l-primary';
   }
 }
 
@@ -136,14 +136,14 @@ export function getSeverityBorderColor(type: UISeverity): string {
  */
 export function getSeverityBadgeColor(type: UISeverity): string {
   switch (type) {
-    case "success":
-      return "bg-success/20 text-success";
-    case "warning":
-      return "bg-warning/20 text-warning";
-    case "danger":
-      return "bg-danger/20 text-danger";
+    case 'success':
+      return 'bg-success/20 text-success';
+    case 'warning':
+      return 'bg-warning/20 text-warning';
+    case 'danger':
+      return 'bg-danger/20 text-danger';
     default:
-      return "bg-primary/20 text-primary";
+      return 'bg-primary/20 text-primary';
   }
 }
 
@@ -157,14 +157,14 @@ export function getSeverityBadgeColor(type: UISeverity): string {
  */
 export function getSeverityBackgroundColor(type: UISeverity): string {
   switch (type) {
-    case "success":
-      return "bg-success/10 text-success border-success/20";
-    case "warning":
-      return "bg-warning/10 text-warning border-warning/20";
-    case "danger":
-      return "bg-danger/10 text-danger border-danger/20";
+    case 'success':
+      return 'bg-success/10 text-success border-success/20';
+    case 'warning':
+      return 'bg-warning/10 text-warning border-warning/20';
+    case 'danger':
+      return 'bg-danger/10 text-danger border-danger/20';
     default:
-      return "bg-primary/10 text-primary border-primary/20";
+      return 'bg-primary/10 text-primary border-primary/20';
   }
 }
 
@@ -179,24 +179,24 @@ const CATEGORY_CONFIG: Record<
   }
 > = {
   maliciousCode: {
-    title: "Malicious Code Issues",
-    description: "No malicious code patterns detected",
+    title: 'Malicious Code Issues',
+    description: 'No malicious code patterns detected',
   },
   dependencies: {
-    title: "Dependency Issues",
-    description: "All dependencies appear safe",
+    title: 'Dependency Issues',
+    description: 'All dependencies appear safe',
   },
   networkActivity: {
-    title: "Network Activity Issues",
-    description: "No suspicious network activity detected",
+    title: 'Network Activity Issues',
+    description: 'No suspicious network activity detected',
   },
   fileSystemSafety: {
-    title: "File System Issues",
-    description: "No dangerous file system operations detected",
+    title: 'File System Issues',
+    description: 'No dangerous file system operations detected',
   },
   credentialSafety: {
-    title: "Credential Safety Issues",
-    description: "No credential leaks or unsafe credential handling detected",
+    title: 'Credential Safety Issues',
+    description: 'No credential leaks or unsafe credential handling detected',
   },
 };
 
@@ -211,7 +211,7 @@ const CATEGORY_CONFIG: Record<
 export function getCategoryTitle(categoryKey: string): string {
   return (
     CATEGORY_CONFIG[categoryKey as FindingCategoryKey]?.title ||
-    "Unknown Issues"
+    'Unknown Issues'
   );
 }
 
@@ -226,7 +226,7 @@ export function getCategoryTitle(categoryKey: string): string {
 export function getCategoryDescription(categoryKey: string): string {
   return (
     CATEGORY_CONFIG[categoryKey as FindingCategoryKey]?.description ||
-    "No issues detected"
+    'No issues detected'
   );
 }
 
@@ -241,9 +241,9 @@ export function getCategoryDescription(categoryKey: string): string {
  */
 export function mapSafetyScoreToUIType(score: string): UISeverity {
   const scoreUpper = score.toUpperCase();
-  if (scoreUpper === "SAFE") return "success";
-  if (scoreUpper === "CAUTION") return "warning";
-  return "danger"; // UNSAFE
+  if (scoreUpper === 'SAFE') return 'success';
+  if (scoreUpper === 'CAUTION') return 'warning';
+  return 'danger'; // UNSAFE
 }
 
 /**
@@ -256,15 +256,15 @@ export function mapSafetyScoreToUIType(score: string): UISeverity {
  * getSafetyScoreLabel(95) // "Safe"
  */
 export function getSafetyScoreLabel(score: string | number): string {
-  if (typeof score === "string") {
+  if (typeof score === 'string') {
     const scoreUpper = score.toUpperCase();
-    if (scoreUpper === "SAFE") return "Safe";
-    if (scoreUpper === "CAUTION") return "Caution";
-    return "Unsafe";
+    if (scoreUpper === 'SAFE') return 'Safe';
+    if (scoreUpper === 'CAUTION') return 'Caution';
+    return 'Unsafe';
   }
 
   // Numeric scores (legacy format)
-  if (score >= 90) return "Safe";
-  if (score >= 70) return "Caution";
-  return "Unsafe";
+  if (score >= 90) return 'Safe';
+  if (score >= 70) return 'Caution';
+  return 'Unsafe';
 }

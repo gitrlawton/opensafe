@@ -3,7 +3,7 @@
  * Displays a placeholder animation while content is loading
  */
 
-import { cn } from "@/lib/utils";
+import { cn } from '@/lib/utils';
 
 function Skeleton({
   className,
@@ -11,7 +11,7 @@ function Skeleton({
 }: React.HTMLAttributes<HTMLDivElement>): JSX.Element {
   return (
     <div
-      className={cn("animate-pulse rounded-md bg-muted", className)}
+      className={cn('animate-pulse rounded-md bg-muted', className)}
       {...props}
     />
   );

@@ -19,7 +19,7 @@
  * @module lib/validations/api
  */
 
-import { z } from "zod";
+import { z } from 'zod';
 
 /**
  * GitHub URL validation
@@ -27,10 +27,10 @@ import { z } from "zod";
  */
 export const githubUrlSchema = z
   .string()
-  .url("Invalid URL format")
+  .url('Invalid URL format')
   .regex(
     /^https?:\/\/(www\.)?github\.com\/[\w-]+\/[\w.-]+\/?$/,
-    "Invalid GitHub repository URL format. Expected: https://github.com/owner/repository"
+    'Invalid GitHub repository URL format. Expected: https://github.com/owner/repository'
   );
 
 /**
@@ -45,20 +45,20 @@ export type ScanRequest = z.infer<typeof scanRequestSchema>;
 /**
  * Finding severity validation
  */
-export const findingSeveritySchema = z.enum(["low", "moderate", "severe"]);
+export const findingSeveritySchema = z.enum(['low', 'moderate', 'severe']);
 
 /**
  * Safety level validation
  */
-export const safetyLevelSchema = z.enum(["safe", "caution", "unsafe"]);
+export const safetyLevelSchema = z.enum(['safe', 'caution', 'unsafe']);
 
 /**
  * Individual finding validation
  */
 export const findingSchema = z.object({
-  item: z.string().min(1, "Item is required"),
-  location: z.string().min(1, "Location is required"),
-  issue: z.string().min(1, "Issue description is required"),
+  item: z.string().min(1, 'Item is required'),
+  location: z.string().min(1, 'Location is required'),
+  issue: z.string().min(1, 'Issue description is required'),
   severity: findingSeveritySchema,
   codeSnippet: z.string().optional(),
   batchId: z.number().optional(),
@@ -96,7 +96,7 @@ export const scanResultSchema = z.object({
   repoMetadata: repoMetadataSchema.optional(),
   findings: findingsSchema,
   safetyLevel: safetyLevelSchema,
-  aiSummary: z.string().min(1, "AI summary is required"),
+  aiSummary: z.string().min(1, 'AI summary is required'),
   scannedAt: z.string().datetime(),
   validated: z.boolean(),
   corrections: z.array(z.string()).optional(),
@@ -175,9 +175,9 @@ export type ErrorResponse = z.infer<typeof errorResponseSchema>;
 export function sanitizeString(input: string): string {
   return input
     .trim()
-    .replace(/[<>]/g, "") // Remove < and > to prevent HTML injection
-    .replace(/javascript:/gi, "") // Remove javascript: protocol
-    .replace(/on\w+=/gi, "") // Remove event handlers like onclick=
+    .replace(/[<>]/g, '') // Remove < and > to prevent HTML injection
+    .replace(/javascript:/gi, '') // Remove javascript: protocol
+    .replace(/on\w+=/gi, '') // Remove event handlers like onclick=
     .slice(0, 2000); // Limit length
 }
 
@@ -207,9 +207,9 @@ export function sanitizeObject<T extends Record<string, any>>(obj: T): T {
   const sanitized = { ...obj };
 
   for (const key in sanitized) {
-    if (typeof sanitized[key] === "string") {
+    if (typeof sanitized[key] === 'string') {
       sanitized[key] = sanitizeString(sanitized[key]) as any;
-    } else if (typeof sanitized[key] === "object" && sanitized[key] !== null) {
+    } else if (typeof sanitized[key] === 'object' && sanitized[key] !== null) {
       sanitized[key] = sanitizeObject(sanitized[key]);
     }
   }
@@ -249,7 +249,7 @@ export function validateAndSanitize<T>(
   const parsed = schema.parse(data);
 
   // Sanitize if it's an object with strings
-  if (typeof parsed === "object" && parsed !== null) {
+  if (typeof parsed === 'object' && parsed !== null) {
     return sanitizeObject(parsed as any) as T;
   }
 
@@ -290,9 +290,9 @@ export function validateAndSanitize<T>(
 export function createValidationError(error: z.ZodError): ErrorResponse {
   return {
     success: false,
-    message: "Validation failed",
+    message: 'Validation failed',
     details: error.errors.map((err) => ({
-      field: err.path.join("."),
+      field: err.path.join('.'),
       message: err.message,
     })),
   };

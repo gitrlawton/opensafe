@@ -20,10 +20,10 @@
  * @module lib/ai/gemini/scan-workflow
  */
 
-import { GeminiService, SchemaType } from "./gemini-service";
-import { GitHubClient } from "../../github/client";
-import * as fs from "fs";
-import * as path from "path";
+import { GeminiService, SchemaType } from './gemini-service';
+import { GitHubClient } from '../../github/client';
+import * as fs from 'fs';
+import * as path from 'path';
 import {
   SCAN_BATCH_SIZE,
   GEMINI_RISK_DETECTION_TEMPERATURE,
@@ -31,7 +31,7 @@ import {
   GEMINI_MAX_OUTPUT_TOKENS,
   GEMINI_SAFETY_LEVEL_TEMPERATURE,
   GEMINI_SAFETY_LEVEL_MAX_TOKENS,
-} from "@/lib/constants";
+} from '@/lib/constants';
 import type {
   Finding,
   Findings,
@@ -40,8 +40,12 @@ import type {
   GeminiSchema,
   GeminiWorkflowConfig,
   SafetyLevel,
-} from "@/types/scan";
-import type { PackageJson, GitHubRepoMetadata, GitHubTreeItem } from "@/types/github";
+} from '@/types/scan';
+import type {
+  PackageJson,
+  GitHubRepoMetadata,
+  GitHubTreeItem,
+} from '@/types/github';
 
 /**
  * Main workflow orchestrator for repository security scanning
@@ -115,8 +119,8 @@ export class GeminiScanWorkflow {
     existingFolderPath?: string
   ): string {
     // Skip file writing in production
-    if (process.env.NODE_ENV === "production") {
-      return "";
+    if (process.env.NODE_ENV === 'production') {
+      return '';
     }
 
     let scanResultsDir: string;
@@ -125,15 +129,15 @@ export class GeminiScanWorkflow {
       scanResultsDir = existingFolderPath;
     } else {
       const repoName = repoUrl
-        .replace(/https?:\/\//, "")
-        .replace(/github\.com\//, "")
-        .replace(/\//g, "-")
-        .replace(/[^a-zA-Z0-9-]/g, "_");
+        .replace(/https?:\/\//, '')
+        .replace(/github\.com\//, '')
+        .replace(/\//g, '-')
+        .replace(/[^a-zA-Z0-9-]/g, '_');
 
-      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const folderName = `${timestamp}_${repoName}`;
 
-      scanResultsDir = path.join(process.cwd(), "scan_results", folderName);
+      scanResultsDir = path.join(process.cwd(), 'scan_results', folderName);
 
       if (!fs.existsSync(scanResultsDir)) {
         fs.mkdirSync(scanResultsDir, { recursive: true });
@@ -141,7 +145,7 @@ export class GeminiScanWorkflow {
     }
 
     const filePath = path.join(scanResultsDir, filename);
-    fs.writeFileSync(filePath, JSON.stringify(findings, null, 2), "utf-8");
+    fs.writeFileSync(filePath, JSON.stringify(findings, null, 2), 'utf-8');
 
     return filePath;
   }
@@ -178,19 +182,19 @@ export class GeminiScanWorkflow {
 
     try {
       // Step 1: Fetch repository content (using GitHub API - no LLM needed)
-      console.log("📦 Step 1/3: Fetching repository content...");
+      console.log('📦 Step 1/3: Fetching repository content...');
       const repoData = await this.fetchRepoContent(repoUrl);
-      console.log("✅ Repository data fetched\n");
+      console.log('✅ Repository data fetched\n');
 
       // Step 2: Detect security risks (using Gemini)
-      console.log("🔎 Step 2/3: Analyzing for security risks with Gemini...");
+      console.log('🔎 Step 2/3: Analyzing for security risks with Gemini...');
       const { findings, scanFolderPath: step2FolderPath } =
         await this.detectRisks(repoData, repoUrl);
-      console.log("✅ Risk analysis complete\n");
+      console.log('✅ Risk analysis complete\n');
 
       // Step 3: Calculate safety level and generate summary (using Gemini)
       console.log(
-        "📊 Step 3/3: Calculating safety level and generating summary with Gemini..."
+        '📊 Step 3/3: Calculating safety level and generating summary with Gemini...'
       );
       const { safetyLevel, aiSummary, scanFolderPath } =
         await this.calculateSafetyLevel(
@@ -216,14 +220,14 @@ export class GeminiScanWorkflow {
       this.saveScanFindings(
         repoUrl,
         finalResult,
-        "final-scan-result.json",
+        'final-scan-result.json',
         scanFolderPath
       );
       console.log(`💾 All step findings saved to: ${scanFolderPath}\n`);
 
       return finalResult;
     } catch (error) {
-      console.error("\n❌ Scan failed:", error);
+      console.error('\n❌ Scan failed:', error);
       throw error;
     }
   }
@@ -258,7 +262,7 @@ export class GeminiScanWorkflow {
     }
 
     if (
-      packageJsonContent.startsWith("[Skipped") ||
+      packageJsonContent.startsWith('[Skipped') ||
       !packageJsonContent.trim()
     ) {
       log(`⚠️  package.json was skipped or empty`);
@@ -375,7 +379,7 @@ export class GeminiScanWorkflow {
     log(`\n✅ All files fetched from GitHub`);
 
     // Extract package.json data if available
-    const packageJsonContent = scannedFiles.get("package.json");
+    const packageJsonContent = scannedFiles.get('package.json');
     const { packageJson, installScripts } = this.parsePackageJson(
       packageJsonContent,
       log
@@ -424,11 +428,11 @@ export class GeminiScanWorkflow {
       .map((path) => {
         const content = repoData.scannedFiles[path];
         if (!content) return `${path}: [Could not read]`;
-        if (content.startsWith("[Skipped")) return `${path}: ${content}`;
+        if (content.startsWith('[Skipped')) return `${path}: ${content}`;
 
         return `\n=== ${path} ===\n${content}\n`;
       })
-      .join("\n");
+      .join('\n');
 
     return `Analyze these ${batch.length} files from ${repoData.repoMetadata.owner}/${repoData.repoMetadata.name} for security threats TO CONTRIBUTORS:
 
@@ -527,12 +531,12 @@ Return JSON in this exact format:
         batchId: { type: SchemaType.NUMBER },
       },
       required: [
-        "item",
-        "location",
-        "issue",
-        "severity",
-        "codeSnippet",
-        "batchId",
+        'item',
+        'location',
+        'issue',
+        'severity',
+        'codeSnippet',
+        'batchId',
       ],
     };
 
@@ -572,15 +576,15 @@ Return JSON in this exact format:
             },
           },
           required: [
-            "maliciousCode",
-            "dependencies",
-            "networkActivity",
-            "fileSystemSafety",
-            "credentialSafety",
+            'maliciousCode',
+            'dependencies',
+            'networkActivity',
+            'fileSystemSafety',
+            'credentialSafety',
           ],
         },
       },
-      required: ["findings"],
+      required: ['findings'],
     };
   }
 
@@ -598,7 +602,7 @@ Return JSON in this exact format:
     batchFindings: Findings | { findings: Findings }
   ): void {
     const findings =
-      "findings" in batchFindings ? batchFindings.findings : batchFindings;
+      'findings' in batchFindings ? batchFindings.findings : batchFindings;
 
     if (findings.maliciousCode && Array.isArray(findings.maliciousCode)) {
       allFindings.maliciousCode.push(...findings.maliciousCode);
@@ -609,10 +613,7 @@ Return JSON in this exact format:
     if (findings.networkActivity && Array.isArray(findings.networkActivity)) {
       allFindings.networkActivity.push(...findings.networkActivity);
     }
-    if (
-      findings.fileSystemSafety &&
-      Array.isArray(findings.fileSystemSafety)
-    ) {
+    if (findings.fileSystemSafety && Array.isArray(findings.fileSystemSafety)) {
       allFindings.fileSystemSafety.push(...findings.fileSystemSafety);
     }
     if (findings.credentialSafety && Array.isArray(findings.credentialSafety)) {
@@ -782,7 +783,7 @@ Return JSON in this exact format:
     const step2FilePath = this.saveScanFindings(
       repoUrl,
       allFindings,
-      "step-2-findings.json"
+      'step-2-findings.json'
     );
     const scanFolderPath = path.dirname(step2FilePath);
     log(`   💾 Step 2 findings saved\n`);
@@ -807,8 +808,8 @@ Return JSON in this exact format:
     return `Analyze these security findings and provide safety level and summary FOR CONTRIBUTORS:
 
 Repository: ${repoMetadata.owner}/${repoMetadata.name}
-${repoMetadata.description ? `Description: ${repoMetadata.description}` : ""}
-Language: ${repoMetadata.language || "Unknown"}
+${repoMetadata.description ? `Description: ${repoMetadata.description}` : ''}
+Language: ${repoMetadata.language || 'Unknown'}
 Stars: ${repoMetadata.stars || 0}
 
 Findings:
@@ -853,14 +854,14 @@ Return JSON in this exact format:
       properties: {
         safetyLevel: {
           type: SchemaType.STRING,
-          description: "Overall safety level: safe, caution, or unsafe",
+          description: 'Overall safety level: safe, caution, or unsafe',
         },
         aiSummary: {
           type: SchemaType.STRING,
-          description: "2-3 sentence summary of the security assessment",
+          description: '2-3 sentence summary of the security assessment',
         },
       },
-      required: ["safetyLevel", "aiSummary"],
+      required: ['safetyLevel', 'aiSummary'],
     };
   }
 
@@ -899,11 +900,11 @@ Return JSON in this exact format:
     log(`🤖 Calling Gemini for Safety Scoring and Summary Generation...`);
 
     const categories = [
-      "maliciousCode",
-      "dependencies",
-      "networkActivity",
-      "fileSystemSafety",
-      "credentialSafety",
+      'maliciousCode',
+      'dependencies',
+      'networkActivity',
+      'fileSystemSafety',
+      'credentialSafety',
     ];
     const totalFindings = categories.reduce(
       (sum, cat) => sum + (findings[cat as keyof Findings]?.length || 0),
@@ -933,7 +934,7 @@ Return JSON in this exact format:
     this.saveScanFindings(
       repoUrl,
       result,
-      "step-3-findings.json",
+      'step-3-findings.json',
       existingFolderPath
     );
     log(`   💾 Step 3 findings saved`);

@@ -27,33 +27,49 @@ import {
 describe('API Validation Schemas', () => {
   describe('githubUrlSchema', () => {
     it('should accept valid GitHub HTTPS URLs', () => {
-      expect(() => githubUrlSchema.parse('https://github.com/facebook/react')).not.toThrow();
-      expect(() => githubUrlSchema.parse('https://www.github.com/microsoft/vscode')).not.toThrow();
+      expect(() =>
+        githubUrlSchema.parse('https://github.com/facebook/react')
+      ).not.toThrow();
+      expect(() =>
+        githubUrlSchema.parse('https://www.github.com/microsoft/vscode')
+      ).not.toThrow();
     });
 
     it('should accept valid GitHub HTTP URLs', () => {
-      expect(() => githubUrlSchema.parse('http://github.com/nodejs/node')).not.toThrow();
+      expect(() =>
+        githubUrlSchema.parse('http://github.com/nodejs/node')
+      ).not.toThrow();
     });
 
     it('should accept URLs with trailing slash', () => {
-      expect(() => githubUrlSchema.parse('https://github.com/torvalds/linux/')).not.toThrow();
+      expect(() =>
+        githubUrlSchema.parse('https://github.com/torvalds/linux/')
+      ).not.toThrow();
     });
 
     it('should accept repo names with dots and dashes', () => {
-      expect(() => githubUrlSchema.parse('https://github.com/org-name/repo.name')).not.toThrow();
+      expect(() =>
+        githubUrlSchema.parse('https://github.com/org-name/repo.name')
+      ).not.toThrow();
     });
 
     it('should reject non-GitHub URLs', () => {
-      expect(() => githubUrlSchema.parse('https://gitlab.com/user/repo')).toThrow(ZodError);
+      expect(() =>
+        githubUrlSchema.parse('https://gitlab.com/user/repo')
+      ).toThrow(ZodError);
     });
 
     it('should reject invalid URL formats', () => {
       expect(() => githubUrlSchema.parse('not-a-url')).toThrow(ZodError);
-      expect(() => githubUrlSchema.parse('github.com/user/repo')).toThrow(ZodError);
+      expect(() => githubUrlSchema.parse('github.com/user/repo')).toThrow(
+        ZodError
+      );
     });
 
     it('should reject GitHub URLs with extra path segments', () => {
-      expect(() => githubUrlSchema.parse('https://github.com/user/repo/issues')).toThrow(ZodError);
+      expect(() =>
+        githubUrlSchema.parse('https://github.com/user/repo/issues')
+      ).toThrow(ZodError);
     });
 
     it('should reject empty strings', () => {
@@ -132,13 +148,15 @@ describe('API Validation Schemas', () => {
 
     it('should reject finding without required fields', () => {
       expect(() => findingSchema.parse({ item: 'file.js' })).toThrow(ZodError);
-      expect(() => findingSchema.parse({ location: 'line 5' })).toThrow(ZodError);
+      expect(() => findingSchema.parse({ location: 'line 5' })).toThrow(
+        ZodError
+      );
     });
 
     it('should reject finding with empty strings', () => {
-      expect(() =>
-        findingSchema.parse({ ...validFinding, item: '' })
-      ).toThrow(ZodError);
+      expect(() => findingSchema.parse({ ...validFinding, item: '' })).toThrow(
+        ZodError
+      );
     });
 
     it('should reject finding with invalid dependencyUrl', () => {
@@ -262,9 +280,7 @@ describe('API Validation Schemas', () => {
         success: false as const,
         message: 'Validation failed',
         error: 'Invalid input',
-        details: [
-          { field: 'repoUrl', message: 'Invalid URL format' },
-        ],
+        details: [{ field: 'repoUrl', message: 'Invalid URL format' }],
       };
       expect(() => errorResponseSchema.parse(errorResponse)).not.toThrow();
     });
@@ -305,7 +321,9 @@ describe('Sanitization Functions', () => {
     });
 
     it('should remove < and > characters', () => {
-      expect(sanitizeString('<script>alert("xss")</script>')).toBe('scriptalert("xss")/script');
+      expect(sanitizeString('<script>alert("xss")</script>')).toBe(
+        'scriptalert("xss")/script'
+      );
       expect(sanitizeString('<div>content</div>')).toBe('divcontent/div');
     });
 
@@ -340,7 +358,9 @@ describe('Sanitization Functions', () => {
     it('should handle normal strings without modification', () => {
       expect(sanitizeString('Hello World')).toBe('Hello World');
       expect(sanitizeString('user@example.com')).toBe('user@example.com');
-      expect(sanitizeString('https://github.com/user/repo')).toBe('https://github.com/user/repo');
+      expect(sanitizeString('https://github.com/user/repo')).toBe(
+        'https://github.com/user/repo'
+      );
     });
 
     it('should handle empty string', () => {
@@ -454,7 +474,7 @@ describe('Sanitization Functions', () => {
       } catch (error) {
         if (error instanceof ZodError) {
           const result = createValidationError(error);
-          const fields = result.details!.map(d => d.field);
+          const fields = result.details!.map((d) => d.field);
           expect(fields).toContain('item');
         }
       }
@@ -462,7 +482,11 @@ describe('Sanitization Functions', () => {
 
     it('should include error messages in details', () => {
       try {
-        repoMetadataSchema.parse({ owner: 'test', name: 'test', defaultBranch: '' });
+        repoMetadataSchema.parse({
+          owner: 'test',
+          name: 'test',
+          defaultBranch: '',
+        });
       } catch (error) {
         if (error instanceof ZodError) {
           const result = createValidationError(error);
@@ -492,7 +516,9 @@ describe('Sanitization Functions', () => {
       } catch (error) {
         if (error instanceof ZodError) {
           const result = createValidationError(error);
-          expect(result.details!.some(d => d.field.includes('.'))).toBe(false); // aiSummary is top-level
+          expect(result.details!.some((d) => d.field.includes('.'))).toBe(
+            false
+          ); // aiSummary is top-level
         }
       }
     });

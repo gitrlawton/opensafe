@@ -17,9 +17,12 @@
  * @module lib/database/snowflake
  */
 
-import "server-only";
-import snowflake from "snowflake-sdk";
-import type { InsertScannedRepoData, SnowflakeRepoRecord } from "@/types/database";
+import 'server-only';
+import snowflake from 'snowflake-sdk';
+import type {
+  InsertScannedRepoData,
+  SnowflakeRepoRecord,
+} from '@/types/database';
 
 /**
  * Snowflake connection configuration
@@ -31,7 +34,7 @@ const connectionOptions: snowflake.ConnectionOptions = {
   password: process.env.SNOWFLAKE_PASSWORD!,
   warehouse: process.env.SNOWFLAKE_WAREHOUSE!,
   database: process.env.SNOWFLAKE_DATABASE!,
-  schema: process.env.SNOWFLAKE_SCHEMA || "PUBLIC",
+  schema: process.env.SNOWFLAKE_SCHEMA || 'PUBLIC',
 };
 
 /**
@@ -65,10 +68,10 @@ export function getConnection(): Promise<snowflake.Connection> {
     connection = snowflake.createConnection(connectionOptions);
     connection.connect((err, conn) => {
       if (err) {
-        console.error("Unable to connect to Snowflake:", err.message);
+        console.error('Unable to connect to Snowflake:', err.message);
         reject(err);
       } else {
-        console.log("Successfully connected to Snowflake");
+        console.log('Successfully connected to Snowflake');
         resolve(conn);
       }
     });
@@ -112,7 +115,7 @@ export function executeQuery<T = any>(
         binds: binds,
         complete: (err, stmt, rows) => {
           if (err) {
-            console.error("Failed to execute query:", err.message);
+            console.error('Failed to execute query:', err.message);
             reject(err);
           } else {
             resolve((rows as T[]) || []);
@@ -154,7 +157,9 @@ export function executeQuery<T = any>(
  * });
  * ```
  */
-export async function insertScannedRepo(data: InsertScannedRepoData): Promise<void> {
+export async function insertScannedRepo(
+  data: InsertScannedRepoData
+): Promise<void> {
   // Use MERGE to UPSERT - update if exists, insert if not
   // Pass timestamp explicitly in UTC to avoid timezone issues
   const scannedAtUTC = new Date().toISOString();
@@ -195,7 +200,9 @@ export async function insertScannedRepo(data: InsertScannedRepoData): Promise<vo
     scannedAtUTC,
   ]);
 
-  console.log(`✅ Successfully saved scan to Snowflake: ${data.repoOwner}/${data.repoName} at ${scannedAtUTC}`);
+  console.log(
+    `✅ Successfully saved scan to Snowflake: ${data.repoOwner}/${data.repoName} at ${scannedAtUTC}`
+  );
 }
 
 /**
@@ -217,7 +224,9 @@ export async function insertScannedRepo(data: InsertScannedRepoData): Promise<vo
  * const allRecentScans = await getScannedRepos();
  * ```
  */
-export async function getScannedRepos(limit: number = 100): Promise<SnowflakeRepoRecord[]> {
+export async function getScannedRepos(
+  limit: number = 100
+): Promise<SnowflakeRepoRecord[]> {
   const query = `
     SELECT
       ID,

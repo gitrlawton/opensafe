@@ -32,7 +32,7 @@ jest.mock('@/lib/validations/api', () => {
     reposQuerySchema: {
       parse: jest.fn((params) => {
         const limit = params.limit ? parseInt(params.limit, 10) : undefined;
-        if (params.limit && isNaN(limit)) {
+        if (params.limit && limit !== undefined && isNaN(limit)) {
           throw new ActualZodError([
             {
               code: 'invalid_type',
@@ -137,7 +137,9 @@ describe('GET /api/repos', () => {
   it('should not exceed maximum limit', async () => {
     (snowflake.getScannedRepos as jest.Mock).mockResolvedValue(mockRepos);
 
-    const request = new NextRequest('http://localhost:3000/api/repos?limit=999');
+    const request = new NextRequest(
+      'http://localhost:3000/api/repos?limit=999'
+    );
     await GET(request);
 
     // Should be capped at MAX_REPOS_FETCH_LIMIT (100)
@@ -145,7 +147,9 @@ describe('GET /api/repos', () => {
   });
 
   it('should return 400 for invalid limit parameter', async () => {
-    const request = new NextRequest('http://localhost:3000/api/repos?limit=invalid');
+    const request = new NextRequest(
+      'http://localhost:3000/api/repos?limit=invalid'
+    );
     const response = await GET(request);
     const data = await response.json();
 
@@ -196,7 +200,9 @@ describe('GET /api/repos', () => {
       },
     ];
 
-    (snowflake.getScannedRepos as jest.Mock).mockResolvedValue(repoWithSpecialChars);
+    (snowflake.getScannedRepos as jest.Mock).mockResolvedValue(
+      repoWithSpecialChars
+    );
 
     const request = new NextRequest('http://localhost:3000/api/repos');
     const response = await GET(request);
@@ -220,7 +226,9 @@ describe('GET /api/repos', () => {
       },
     ];
 
-    (snowflake.getScannedRepos as jest.Mock).mockResolvedValue(repoWithMissingFields);
+    (snowflake.getScannedRepos as jest.Mock).mockResolvedValue(
+      repoWithMissingFields
+    );
 
     const request = new NextRequest('http://localhost:3000/api/repos');
     const response = await GET(request);

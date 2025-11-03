@@ -32,6 +32,7 @@ describe('Environment Validation', () => {
 
   describe('serverEnvSchema', () => {
     const validEnv = {
+      NODE_ENV: 'test' as const,
       AUTH0_SECRET: 'a'.repeat(32),
       APP_BASE_URL: 'http://localhost:3000',
       AUTH0_DOMAIN: 'test.auth0.com',
@@ -84,7 +85,10 @@ describe('Environment Validation', () => {
       });
 
       it('should accept optional AUTH0_SCOPE', () => {
-        const envWithScope = { ...validEnv, AUTH0_SCOPE: 'openid profile email' };
+        const envWithScope = {
+          ...validEnv,
+          AUTH0_SCOPE: 'openid profile email',
+        };
         expect(() => serverEnvSchema.parse(envWithScope)).not.toThrow();
       });
 
@@ -212,9 +216,11 @@ describe('Environment Validation', () => {
     });
 
     it('should throw error with descriptive message when validation fails', () => {
-      process.env = { ...validEnv, AUTH0_SECRET: 'short' };
+      process.env = { ...validEnv, AUTH0_SECRET: 'short' } as any;
 
-      expect(() => validateServerEnv()).toThrow('Invalid environment variables');
+      expect(() => validateServerEnv()).toThrow(
+        'Invalid environment variables'
+      );
       expect(() => validateServerEnv()).toThrow('AUTH0_SECRET');
     });
 
@@ -223,7 +229,7 @@ describe('Environment Validation', () => {
         ...validEnv,
         AUTH0_SECRET: 'short',
         APP_BASE_URL: 'not-a-url',
-      };
+      } as any;
 
       try {
         validateServerEnv();
@@ -239,13 +245,13 @@ describe('Environment Validation', () => {
 
     it('should throw error when required variable is missing', () => {
       const { GEMINI_API_KEY, ...incompleteEnv } = validEnv;
-      process.env = incompleteEnv;
+      process.env = incompleteEnv as any;
 
       expect(() => validateServerEnv()).toThrow();
     });
 
     it('should provide helpful error message format', () => {
-      process.env = { ...validEnv, GEMINI_API_KEY: '' };
+      process.env = { ...validEnv, GEMINI_API_KEY: '' } as any;
 
       try {
         validateServerEnv();
@@ -272,6 +278,7 @@ describe('Environment Validation', () => {
 
     it('should ignore non-public environment variables', () => {
       process.env = {
+        NODE_ENV: 'test',
         SECRET_KEY: 'should-not-be-validated',
         NEXT_PUBLIC_TEST: 'public-var',
       };
@@ -283,6 +290,7 @@ describe('Environment Validation', () => {
   describe('Type safety', () => {
     it('should provide type-safe access to server environment variables', () => {
       process.env = {
+        NODE_ENV: 'test',
         AUTH0_SECRET: 'a'.repeat(32),
         APP_BASE_URL: 'http://localhost:3000',
         AUTH0_DOMAIN: 'test.auth0.com',

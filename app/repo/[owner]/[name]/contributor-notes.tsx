@@ -1,13 +1,15 @@
-"use client"
+'use client';
 
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 
 interface ContributorNotesProps {
-  isLoggedIn: boolean
+  isLoggedIn: boolean;
 }
 
-export function ContributorNotes({ isLoggedIn }: ContributorNotesProps): JSX.Element {
+export function ContributorNotes({
+  isLoggedIn,
+}: ContributorNotesProps): JSX.Element {
   return (
     <div className="opacity-50 pointer-events-none">
       {isLoggedIn ? (
@@ -28,5 +30,5 @@ export function ContributorNotes({ isLoggedIn }: ContributorNotesProps): JSX.Ele
         </div>
       )}
     </div>
-  )
+  );
 }

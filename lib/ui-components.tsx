@@ -3,8 +3,12 @@
  * Reusable React components for UI patterns
  */
 
-import { CheckCircle2, AlertTriangle, Info } from "lucide-react";
-import { getSeverityIconType, getSeverityIconColor, type UISeverity } from "./ui-helpers";
+import { CheckCircle2, AlertTriangle, Info } from 'lucide-react';
+import {
+  getSeverityIconType,
+  getSeverityIconColor,
+  type UISeverity,
+} from './ui-helpers';
 
 /**
  * Gets the appropriate icon component for a UI severity type
@@ -21,11 +25,11 @@ export function SeverityIcon({ type }: { type: UISeverity }): JSX.Element {
   const className = `h-5 w-5 ${colorClass}`;
 
   switch (iconType) {
-    case "check":
+    case 'check':
       return <CheckCircle2 className={className} />;
-    case "alert":
+    case 'alert':
       return <AlertTriangle className={className} />;
-    case "info":
+    case 'info':
     default:
       return <Info className={className} />;
   }

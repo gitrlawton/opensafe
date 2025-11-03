@@ -3,22 +3,22 @@
  * Shared types for repository security scanning
  */
 
-import type { GitHubRepoMetadata, PackageJson } from "./github";
+import type { GitHubRepoMetadata, PackageJson } from './github';
 
 /**
  * Security finding severity levels
  */
-export type FindingSeverity = "low" | "moderate" | "severe";
+export type FindingSeverity = 'low' | 'moderate' | 'severe';
 
 /**
  * Safety assessment levels
  */
-export type SafetyLevel = "safe" | "caution" | "unsafe";
+export type SafetyLevel = 'safe' | 'caution' | 'unsafe';
 
 /**
  * Safety score (database format)
  */
-export type SafetyScore = "SAFE" | "CAUTION" | "UNSAFE";
+export type SafetyScore = 'SAFE' | 'CAUTION' | 'UNSAFE';
 
 /**
  * Individual security finding

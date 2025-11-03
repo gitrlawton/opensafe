@@ -1,30 +1,30 @@
-"use client";
+'use client';
 
-import type React from "react";
+import type React from 'react';
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { withPageAuthRequired } from "@auth0/nextjs-auth0/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { withPageAuthRequired } from '@auth0/nextjs-auth0/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { parseGitHubUrl, isValidGitHubUrl, buildRepoUrl } from "@/lib/utils";
-import { Loader2, Github } from "lucide-react";
-import { ScanningProgress, SCANNING_STEPS_COUNT } from "./scanning-progress";
-import { PageLayout, PageContainer } from "@/components/page-layout";
-import { PageHeader } from "@/components/page-header";
-import { ErrorMessage, SuccessMessage } from "@/components/ui-states";
+} from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { parseGitHubUrl, isValidGitHubUrl, buildRepoUrl } from '@/lib/utils';
+import { Loader2, Github } from 'lucide-react';
+import { ScanningProgress, SCANNING_STEPS_COUNT } from './scanning-progress';
+import { PageLayout, PageContainer } from '@/components/page-layout';
+import { PageHeader } from '@/components/page-header';
+import { ErrorMessage, SuccessMessage } from '@/components/ui-states';
 
 function ScanPage(): JSX.Element {
   const router = useRouter();
-  const [repoUrl, setRepoUrl] = useState("");
+  const [repoUrl, setRepoUrl] = useState('');
   const [isScanning, setIsScanning] = useState(false);
   const [scanComplete, setScanComplete] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
@@ -53,7 +53,7 @@ function ScanPage(): JSX.Element {
     setCurrentStep(0);
 
     if (!isValidGitHubUrl(repoUrl)) {
-      setScanError("Invalid GitHub repository URL");
+      setScanError('Invalid GitHub repository URL');
       setIsScanning(false);
       return;
     }
@@ -62,17 +62,17 @@ function ScanPage(): JSX.Element {
 
     try {
       // Call the real Gemini scan API
-      const response = await fetch("/api/scan-gemini", {
-        method: "POST",
+      const response = await fetch('/api/scan-gemini', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ repoUrl }),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Scan failed");
+        throw new Error(error.message || 'Scan failed');
       }
 
       const result = await response.json();
@@ -86,8 +86,8 @@ function ScanPage(): JSX.Element {
         router.push(url);
       }, 1500);
     } catch (error: any) {
-      console.error("Scan error:", error);
-      setScanError(error.message || "An error occurred during scanning");
+      console.error('Scan error:', error);
+      setScanError(error.message || 'An error occurred during scanning');
       setIsScanning(false);
     }
   };
@@ -146,7 +146,7 @@ function ScanPage(): JSX.Element {
                     Scanning Repository...
                   </>
                 ) : (
-                  "Start Scan"
+                  'Start Scan'
                 )}
               </Button>
             </form>

@@ -43,7 +43,9 @@ describe('Middleware', () => {
     });
 
     it('should return auth0 middleware response on success', async () => {
-      const mockResponse = NextResponse.redirect(new URL('/api/auth/login', 'http://localhost:3000'));
+      const mockResponse = NextResponse.redirect(
+        new URL('/api/auth/login', 'http://localhost:3000')
+      );
       (auth0.middleware as jest.Mock).mockResolvedValue(mockResponse);
 
       const request = new NextRequest('http://localhost:3000/protected');
@@ -74,14 +76,21 @@ describe('Middleware', () => {
       const request = new NextRequest('http://localhost:3000/dashboard');
       const response = await middleware(request);
 
-      expect(console.error).toHaveBeenCalledWith('Auth middleware error:', jweError);
+      expect(console.error).toHaveBeenCalledWith(
+        'Auth middleware error:',
+        jweError
+      );
       expect(response).toBeInstanceOf(NextResponse);
 
       // Verify cookie was deleted (expires set to epoch and value empty)
       const cookie = response.cookies.get('appSession');
       expect(cookie).toBeDefined();
       expect(cookie?.value).toBe('');
-      expect(cookie?.expires?.getTime()).toBe(new Date(0).getTime());
+      const expiresTime =
+        cookie?.expires instanceof Date
+          ? cookie.expires.getTime()
+          : cookie?.expires;
+      expect(expiresTime).toBe(new Date(0).getTime());
     });
 
     it('should continue request after clearing corrupted session', async () => {
@@ -124,7 +133,10 @@ describe('Middleware', () => {
       const request = new NextRequest('http://localhost:3000/test');
       await middleware(request);
 
-      expect(console.error).toHaveBeenCalledWith('Auth middleware error:', jweError);
+      expect(console.error).toHaveBeenCalledWith(
+        'Auth middleware error:',
+        jweError
+      );
     });
   });
 
@@ -135,8 +147,13 @@ describe('Middleware', () => {
 
       const request = new NextRequest('http://localhost:3000/protected');
 
-      await expect(middleware(request)).rejects.toThrow('Authentication failed');
-      expect(console.error).toHaveBeenCalledWith('Auth middleware error:', authError);
+      await expect(middleware(request)).rejects.toThrow(
+        'Authentication failed'
+      );
+      expect(console.error).toHaveBeenCalledWith(
+        'Auth middleware error:',
+        authError
+      );
     });
 
     it('should re-throw errors that do not contain JWE in message', async () => {
@@ -145,7 +162,9 @@ describe('Middleware', () => {
 
       const request = new NextRequest('http://localhost:3000/api/scan');
 
-      await expect(middleware(request)).rejects.toThrow('Network connection failed');
+      await expect(middleware(request)).rejects.toThrow(
+        'Network connection failed'
+      );
     });
 
     it('should handle non-Error objects', async () => {
@@ -169,7 +188,10 @@ describe('Middleware', () => {
         // Expected to throw
       }
 
-      expect(console.error).toHaveBeenCalledWith('Auth middleware error:', error);
+      expect(console.error).toHaveBeenCalledWith(
+        'Auth middleware error:',
+        error
+      );
     });
   });
 
@@ -273,7 +295,9 @@ describe('Middleware', () => {
 
     it('should handle concurrent requests independently', async () => {
       const mockResponse1 = NextResponse.next();
-      const mockResponse2 = NextResponse.redirect(new URL('/login', 'http://localhost:3000'));
+      const mockResponse2 = NextResponse.redirect(
+        new URL('/login', 'http://localhost:3000')
+      );
 
       (auth0.middleware as jest.Mock)
         .mockResolvedValueOnce(mockResponse1)

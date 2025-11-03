@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { SafetyBadge } from "@/components/safety-badge";
-import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { SafetyBadge } from '@/components/safety-badge';
+import { Input } from '@/components/ui/input';
+import { Search } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -12,15 +12,15 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { PageLayout, PageContainer } from "@/components/page-layout";
-import { PageHeader } from "@/components/page-header";
-import { EmptyState } from "@/components/ui-states";
-import { Skeleton } from "@/components/ui/skeleton";
-import type { ScannedRepo } from "@/types/api";
+} from '@/components/ui/table';
+import { PageLayout, PageContainer } from '@/components/page-layout';
+import { PageHeader } from '@/components/page-header';
+import { EmptyState } from '@/components/ui-states';
+import { Skeleton } from '@/components/ui/skeleton';
+import type { ScannedRepo } from '@/types/api';
 
 export default function HomePage(): JSX.Element {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [allRepos, setAllRepos] = useState<ScannedRepo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -29,18 +29,18 @@ export default function HomePage(): JSX.Element {
     const fetchRepos = async (): Promise<void> => {
       try {
         setIsLoading(true);
-        const response = await fetch("/api/repos");
+        const response = await fetch('/api/repos');
 
         if (!response.ok) {
-          throw new Error("Failed to fetch repositories");
+          throw new Error('Failed to fetch repositories');
         }
 
         const repos = await response.json();
         setAllRepos(repos);
         setError(null);
       } catch (err: any) {
-        console.error("Failed to fetch repos:", err);
-        setError(err.message || "Failed to fetch repositories");
+        console.error('Failed to fetch repos:', err);
+        setError(err.message || 'Failed to fetch repositories');
         setAllRepos([]);
       } finally {
         setIsLoading(false);

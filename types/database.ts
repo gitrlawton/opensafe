@@ -3,7 +3,7 @@
  * Shared types for Snowflake database operations
  */
 
-import type { SafetyScore, ScanResult } from "./scan";
+import type { SafetyScore, ScanResult } from './scan';
 
 /**
  * Scanned repository data to insert into database

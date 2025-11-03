@@ -81,12 +81,12 @@ Content-Type: application/json
 ### Programmatic Usage
 
 ```typescript
-import { GeminiScanWorkflow } from "@/lib/ai/gemini/scan-workflow";
+import { GeminiScanWorkflow } from '@/lib/ai/gemini/scan-workflow';
 
 const workflow = new GeminiScanWorkflow({
   geminiApiKey: process.env.GEMINI_API_KEY!,
   githubToken: process.env.GITHUB_TOKEN,
-  geminiModel: "gemini-2.5-flash", // Optional
+  geminiModel: 'gemini-2.5-flash', // Optional
 });
 
 const result = await workflow.scanRepository(repoUrl);

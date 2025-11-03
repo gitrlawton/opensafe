@@ -3,10 +3,10 @@
  * Automatically displayed by Next.js when the page is loading
  */
 
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { PageLayout, PageContainer } from "@/components/page-layout";
-import { BackLink } from "@/components/back-link";
+import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { PageLayout, PageContainer } from '@/components/page-layout';
+import { BackLink } from '@/components/back-link';
 
 export default function Loading(): JSX.Element {
   return (

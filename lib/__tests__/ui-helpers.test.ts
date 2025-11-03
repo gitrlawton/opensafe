@@ -70,8 +70,12 @@ describe('UI Helpers', () => {
 
   describe('getSeverityBadgeColor', () => {
     it('should return badge classes with opacity', () => {
-      expect(getSeverityBadgeColor('success')).toBe('bg-success/20 text-success');
-      expect(getSeverityBadgeColor('warning')).toBe('bg-warning/20 text-warning');
+      expect(getSeverityBadgeColor('success')).toBe(
+        'bg-success/20 text-success'
+      );
+      expect(getSeverityBadgeColor('warning')).toBe(
+        'bg-warning/20 text-warning'
+      );
       expect(getSeverityBadgeColor('danger')).toBe('bg-danger/20 text-danger');
     });
   });
@@ -80,7 +84,9 @@ describe('UI Helpers', () => {
     it('should return background classes with border variants', () => {
       expect(getSeverityBackgroundColor('success')).toContain('bg-success/10');
       expect(getSeverityBackgroundColor('success')).toContain('text-success');
-      expect(getSeverityBackgroundColor('success')).toContain('border-success/20');
+      expect(getSeverityBackgroundColor('success')).toContain(
+        'border-success/20'
+      );
     });
   });
 
@@ -88,9 +94,13 @@ describe('UI Helpers', () => {
     it('should return correct titles for known categories', () => {
       expect(getCategoryTitle('maliciousCode')).toBe('Malicious Code Issues');
       expect(getCategoryTitle('dependencies')).toBe('Dependency Issues');
-      expect(getCategoryTitle('networkActivity')).toBe('Network Activity Issues');
+      expect(getCategoryTitle('networkActivity')).toBe(
+        'Network Activity Issues'
+      );
       expect(getCategoryTitle('fileSystemSafety')).toBe('File System Issues');
-      expect(getCategoryTitle('credentialSafety')).toBe('Credential Safety Issues');
+      expect(getCategoryTitle('credentialSafety')).toBe(
+        'Credential Safety Issues'
+      );
     });
 
     it('should return Unknown Issues for unknown categories', () => {
@@ -100,12 +110,18 @@ describe('UI Helpers', () => {
 
   describe('getCategoryDescription', () => {
     it('should return correct descriptions for known categories', () => {
-      expect(getCategoryDescription('maliciousCode')).toBe('No malicious code patterns detected');
-      expect(getCategoryDescription('dependencies')).toBe('All dependencies appear safe');
+      expect(getCategoryDescription('maliciousCode')).toBe(
+        'No malicious code patterns detected'
+      );
+      expect(getCategoryDescription('dependencies')).toBe(
+        'All dependencies appear safe'
+      );
     });
 
     it('should return default description for unknown categories', () => {
-      expect(getCategoryDescription('unknownCategory')).toBe('No issues detected');
+      expect(getCategoryDescription('unknownCategory')).toBe(
+        'No issues detected'
+      );
     });
   });
 

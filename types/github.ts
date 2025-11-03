@@ -32,7 +32,7 @@ export interface GitHubFile {
 export interface GitHubTreeItem {
   path: string;
   mode: string;
-  type: "blob" | "tree" | "commit";
+  type: 'blob' | 'tree' | 'commit';
   sha: string;
   size?: number;
   url: string;

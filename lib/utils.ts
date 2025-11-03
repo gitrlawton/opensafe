@@ -1,5 +1,5 @@
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 import {
   MS_PER_MINUTE,
   TIME_DISPLAY_MINUTES_THRESHOLD,
@@ -13,9 +13,9 @@ import {
   TRUSTED_REPO_STAR_THRESHOLD,
   QUERY_PARAM_UNCHANGED,
   QUERY_PARAM_TRUSTED,
-} from "./constants";
-import type { ParsedGitHubUrl, GitHubRepoMetadata } from "@/types/github";
-import type { SafetyLevel, SafetyScore, ScanResult } from "@/types/scan";
+} from './constants';
+import type { ParsedGitHubUrl, GitHubRepoMetadata } from '@/types/github';
+import type { SafetyLevel, SafetyScore, ScanResult } from '@/types/scan';
 
 /**
  * Merges Tailwind CSS classes with proper deduplication
@@ -45,14 +45,14 @@ export function sleep(ms: number): Promise<void> {
  * formatTimestamp("2022-01-15T10:00:00.000Z") // "3 years ago"
  */
 export function formatTimestamp(timestamp: string | Date): string {
-  if (!timestamp) return "Unknown";
+  if (!timestamp) return 'Unknown';
 
   const scanned = new Date(timestamp);
 
   // Check if the date is valid
   if (isNaN(scanned.getTime())) {
-    console.error("Invalid timestamp:", timestamp);
-    return "Unknown";
+    console.error('Invalid timestamp:', timestamp);
+    return 'Unknown';
   }
 
   const now = new Date();
@@ -64,22 +64,21 @@ export function formatTimestamp(timestamp: string | Date): string {
   const diffMonths = Math.floor(diffDays / DAYS_PER_MONTH);
   const diffYears = Math.floor(diffDays / DAYS_PER_YEAR);
 
-  if (diffMins < 1) return "Just now";
+  if (diffMins < 1) return 'Just now';
   if (diffMins < TIME_DISPLAY_MINUTES_THRESHOLD)
-    return `${diffMins} minute${diffMins > 1 ? "s" : ""} ago`;
+    return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
   if (diffHours < TIME_DISPLAY_HOURS_THRESHOLD)
-    return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+    return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
   if (diffDays < TIME_DISPLAY_DAYS_THRESHOLD)
-    return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+    return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
   if (diffWeeks <= TIME_DISPLAY_WEEKS_THRESHOLD)
-    return `${diffWeeks} week${diffWeeks > 1 ? "s" : ""} ago`;
+    return `${diffWeeks} week${diffWeeks > 1 ? 's' : ''} ago`;
   if (diffMonths >= 1 && diffMonths <= TIME_DISPLAY_MONTHS_THRESHOLD)
-    return `${diffMonths} month${diffMonths > 1 ? "s" : ""} ago`;
-  if (diffYears >= 1)
-    return `${diffYears} year${diffYears > 1 ? "s" : ""} ago`;
+    return `${diffMonths} month${diffMonths > 1 ? 's' : ''} ago`;
+  if (diffYears >= 1) return `${diffYears} year${diffYears > 1 ? 's' : ''} ago`;
 
   // Fallback for edge case (between 3 weeks and 1 month)
-  return `${diffWeeks} week${diffWeeks > 1 ? "s" : ""} ago`;
+  return `${diffWeeks} week${diffWeeks > 1 ? 's' : ''} ago`;
 }
 
 /**
@@ -95,11 +94,11 @@ export function mapSafetyLevelToScore(
   safetyLevel: SafetyLevel | string
 ): SafetyScore {
   const safetyScoreMap: Record<string, SafetyScore> = {
-    safe: "SAFE",
-    caution: "CAUTION",
-    unsafe: "UNSAFE",
+    safe: 'SAFE',
+    caution: 'CAUTION',
+    unsafe: 'UNSAFE',
   };
-  return safetyScoreMap[safetyLevel.toLowerCase()] || "CAUTION";
+  return safetyScoreMap[safetyLevel.toLowerCase()] || 'CAUTION';
 }
 
 /**
@@ -128,7 +127,7 @@ export function parseGitHubUrl(url: string): ParsedGitHubUrl {
 
   return {
     owner: match[1],
-    repo: match[2].replace(/\.git$/, ""),
+    repo: match[2].replace(/\.git$/, ''),
   };
 }
 
@@ -163,14 +162,17 @@ export function isValidGitHubUrl(url: string): boolean {
  * getErrorMessage("Something went wrong") // "Something went wrong"
  * getErrorMessage(null, "Unknown error") // "Unknown error"
  */
-export function getErrorMessage(error: unknown, fallback = "Unknown error occurred"): string {
+export function getErrorMessage(
+  error: unknown,
+  fallback = 'Unknown error occurred'
+): string {
   if (error instanceof Error) {
     return error.message;
   }
-  if (typeof error === "string") {
+  if (typeof error === 'string') {
     return error;
   }
-  if (error && typeof error === "object" && "message" in error) {
+  if (error && typeof error === 'object' && 'message' in error) {
     return String(error.message);
   }
   return fallback;
@@ -191,12 +193,15 @@ export function getErrorMessage(error: unknown, fallback = "Unknown error occurr
  * createApiError("Failed to process", "Missing required field: email")
  * // { error: "Failed to process", message: "Failed to process", details: "Missing required field: email" }
  */
-export function createApiError(error: string | Error, details?: string): {
+export function createApiError(
+  error: string | Error,
+  details?: string
+): {
   error: string;
   message: string;
   details?: string;
 } {
-  const message = typeof error === "string" ? error : error.message;
+  const message = typeof error === 'string' ? error : error.message;
   const response: { error: string; message: string; details?: string } = {
     error: message,
     message,
@@ -219,8 +224,12 @@ export function createApiError(error: string | Error, details?: string): {
  * logError("[API]", "Failed to fetch repos", error)
  * // Console: "[API] Failed to fetch repos: Error message"
  */
-export function logError(context: string, message: string, error?: unknown): void {
-  const errorMessage = error ? getErrorMessage(error) : "";
+export function logError(
+  context: string,
+  message: string,
+  error?: unknown
+): void {
+  const errorMessage = error ? getErrorMessage(error) : '';
   const fullMessage = errorMessage ? `${message}: ${errorMessage}` : message;
   console.error(`${context} ${fullMessage}`);
 
@@ -273,7 +282,7 @@ export function createTrustedRepoScanResult(
       fileSystemSafety: [],
       credentialSafety: [],
     },
-    safetyLevel: "safe",
+    safetyLevel: 'safe',
     aiSummary: `This repository is considered safe based on community trust. With ${starCount.toLocaleString()} stars on GitHub, it has been reviewed and used by a large number of developers in the open source community. Popular repositories with significant community engagement are generally well-maintained and vetted for security issues.`,
     scannedAt: new Date().toISOString(),
     validated: true,
@@ -340,10 +349,10 @@ export function buildRepoUrl(
   const queryParams = new URLSearchParams();
 
   if (scanResult.unchangedSinceLastScan) {
-    queryParams.set(QUERY_PARAM_UNCHANGED, "true");
+    queryParams.set(QUERY_PARAM_UNCHANGED, 'true');
   }
   if (scanResult.trustedByStar) {
-    queryParams.set(QUERY_PARAM_TRUSTED, "true");
+    queryParams.set(QUERY_PARAM_TRUSTED, 'true');
   }
 
   const queryString = queryParams.toString();

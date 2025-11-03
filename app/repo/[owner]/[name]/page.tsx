@@ -1,40 +1,43 @@
-import Link from "next/link";
-import { SafetyBadge } from "@/components/safety-badge";
-import { StarBadge } from "@/components/star-badge";
-import { CommunityTrustCallout } from "@/components/community-trust-callout";
-import { UnchangedRepoCallout } from "@/components/unchanged-repo-callout";
-import { Button } from "@/components/ui/button";
+import Link from 'next/link';
+import { SafetyBadge } from '@/components/safety-badge';
+import { StarBadge } from '@/components/star-badge';
+import { CommunityTrustCallout } from '@/components/community-trust-callout';
+import { UnchangedRepoCallout } from '@/components/unchanged-repo-callout';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { auth0 } from "@/lib/auth0";
-import { getRepoByOwnerAndName } from "@/lib/database/snowflake";
-import { RescanButton } from "./rescan-button";
-import { ContributorNotes } from "./contributor-notes";
-import { formatTimestamp } from "@/lib/utils";
-import { QUERY_PARAM_UNCHANGED, QUERY_PARAM_TRUSTED } from "@/lib/constants";
-import { PageLayout, PageContainer } from "@/components/page-layout";
-import { BackLink } from "@/components/back-link";
-import { SecurityCategory } from "./security-findings";
-import type { PageProps } from "@/types/api";
-import type { Findings } from "@/types/scan";
+} from '@/components/ui/card';
+import { auth0 } from '@/lib/auth0';
+import { getRepoByOwnerAndName } from '@/lib/database/snowflake';
+import { RescanButton } from './rescan-button';
+import { ContributorNotes } from './contributor-notes';
+import { formatTimestamp } from '@/lib/utils';
+import { QUERY_PARAM_UNCHANGED, QUERY_PARAM_TRUSTED } from '@/lib/constants';
+import { PageLayout, PageContainer } from '@/components/page-layout';
+import { BackLink } from '@/components/back-link';
+import { SecurityCategory } from './security-findings';
+import type { PageProps } from '@/types/api';
+import type { Findings } from '@/types/scan';
 
 type RepoPageProps = PageProps<{
   owner: string;
   name: string;
 }>;
 
-export default async function RepoDetailPage({ params, searchParams }: RepoPageProps): Promise<JSX.Element> {
+export default async function RepoDetailPage({
+  params,
+  searchParams,
+}: RepoPageProps): Promise<JSX.Element> {
   const { owner, name } = await params;
   const query = await searchParams;
 
   // Check for special query parameters from scan
-  const isUnchangedScan = query?.[QUERY_PARAM_UNCHANGED] === "true";
-  const isTrustedScan = query?.[QUERY_PARAM_TRUSTED] === "true";
+  const isUnchangedScan = query?.[QUERY_PARAM_UNCHANGED] === 'true';
+  const isTrustedScan = query?.[QUERY_PARAM_TRUSTED] === 'true';
 
   // Get authentication status
   const session = await auth0.getSession();
@@ -77,34 +80,34 @@ export default async function RepoDetailPage({ params, searchParams }: RepoPageP
   // Define security categories
   const securityCategories = [
     {
-      key: "maliciousCode",
-      title: "No Malicious Code Detected",
+      key: 'maliciousCode',
+      title: 'No Malicious Code Detected',
       description:
-        "Code analysis found no obfuscated code, crypto miners, keyloggers, or backdoor patterns.",
+        'Code analysis found no obfuscated code, crypto miners, keyloggers, or backdoor patterns.',
     },
     {
-      key: "dependencies",
-      title: "Dependencies Verified",
+      key: 'dependencies',
+      title: 'Dependencies Verified',
       description:
-        "All dependencies are from trusted sources with no known vulnerabilities or suspicious install scripts.",
+        'All dependencies are from trusted sources with no known vulnerabilities or suspicious install scripts.',
     },
     {
-      key: "networkActivity",
-      title: "No Suspicious Network Activity",
+      key: 'networkActivity',
+      title: 'No Suspicious Network Activity',
       description:
-        "No unauthorized network calls, data exfiltration attempts, or connections to unknown domains detected.",
+        'No unauthorized network calls, data exfiltration attempts, or connections to unknown domains detected.',
     },
     {
-      key: "fileSystemSafety",
-      title: "File System Operations Safe",
+      key: 'fileSystemSafety',
+      title: 'File System Operations Safe',
       description:
-        "No unsafe file operations, suspicious file access patterns, or unauthorized file modifications detected.",
+        'No unsafe file operations, suspicious file access patterns, or unauthorized file modifications detected.',
     },
     {
-      key: "credentialSafety",
-      title: "Credential Safety Verified",
+      key: 'credentialSafety',
+      title: 'Credential Safety Verified',
       description:
-        "No credential harvesting, exposed secrets, or authentication vulnerabilities detected.",
+        'No credential harvesting, exposed secrets, or authentication vulnerabilities detected.',
     },
   ];
 
@@ -121,12 +124,13 @@ export default async function RepoDetailPage({ params, searchParams }: RepoPageP
               </h1>
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-secondary text-secondary-foreground font-medium">
-                  {repoData.LANGUAGE || "Unknown"}
+                  {repoData.LANGUAGE || 'Unknown'}
                 </span>
                 <span>Last scanned {formatTimestamp(repoData.SCANNED_AT)}</span>
-                {(isTrustedScan || findings.trustedByStar) && findings.repoMetadata?.stars && (
-                  <StarBadge stars={findings.repoMetadata.stars} />
-                )}
+                {(isTrustedScan || findings.trustedByStar) &&
+                  findings.repoMetadata?.stars && (
+                    <StarBadge stars={findings.repoMetadata.stars} />
+                  )}
               </div>
             </div>
             <SafetyBadge score={repoData.SAFETY_SCORE} />
@@ -144,12 +148,14 @@ export default async function RepoDetailPage({ params, searchParams }: RepoPageP
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {(isTrustedScan || findings.trustedByStar) && <CommunityTrustCallout />}
+              {(isTrustedScan || findings.trustedByStar) && (
+                <CommunityTrustCallout />
+              )}
               {isUnchangedScan && (
                 <UnchangedRepoCallout lastScannedAt={repoData.SCANNED_AT} />
               )}
               <p className="text-foreground leading-relaxed">
-                {findings.aiSummary || "No summary available"}
+                {findings.aiSummary || 'No summary available'}
               </p>
             </CardContent>
           </Card>
@@ -169,7 +175,9 @@ export default async function RepoDetailPage({ params, searchParams }: RepoPageP
                     categoryKey={category.key}
                     title={category.title}
                     description={category.description}
-                    findings={findings.findings?.[category.key as keyof Findings] || []}
+                    findings={
+                      findings.findings?.[category.key as keyof Findings] || []
+                    }
                   />
                 ))}
               </div>
@@ -181,8 +189,8 @@ export default async function RepoDetailPage({ params, searchParams }: RepoPageP
               <CardTitle>Contributor Notes</CardTitle>
               <CardDescription>
                 {isLoggedIn
-                  ? "Share your experience with this repository"
-                  : "Log in to add your notes and experiences"}
+                  ? 'Share your experience with this repository'
+                  : 'Log in to add your notes and experiences'}
               </CardDescription>
             </CardHeader>
             <CardContent>

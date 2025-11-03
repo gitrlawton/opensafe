@@ -1,7 +1,7 @@
-import Link from "next/link";
-import { Star } from "lucide-react";
-import { auth0 } from "@/lib/auth0";
-import { SignInButton } from "@/components/auth/sign-in-button";
+import Link from 'next/link';
+import { Star } from 'lucide-react';
+import { auth0 } from '@/lib/auth0';
+import { SignInButton } from '@/components/auth/sign-in-button';
 
 export async function Header(): Promise<JSX.Element> {
   let session = null;
@@ -10,7 +10,7 @@ export async function Header(): Promise<JSX.Element> {
     session = await auth0.getSession();
   } catch (error) {
     // If there's an invalid session cookie, ignore it
-    console.error("Failed to get session:", error);
+    console.error('Failed to get session:', error);
   }
 
   return (

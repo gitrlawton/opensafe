@@ -37,7 +37,7 @@ export const SECONDS_PER_MINUTE = 60;
 // ============================================================================
 
 /** Default Gemini model to use for scans */
-export const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
+export const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash';
 
 /** Minimum interval between Gemini API requests (6 seconds = 10 RPM) */
 export const GEMINI_MIN_REQUEST_INTERVAL_MS = 6000;
@@ -87,10 +87,10 @@ export const TRUSTED_REPO_STAR_THRESHOLD = 1000;
 // ============================================================================
 
 /** Query parameter key for unchanged repository flag */
-export const QUERY_PARAM_UNCHANGED = "unchanged";
+export const QUERY_PARAM_UNCHANGED = 'unchanged';
 
 /** Query parameter key for trusted repository flag */
-export const QUERY_PARAM_TRUSTED = "trusted";
+export const QUERY_PARAM_TRUSTED = 'trusted';
 
 // ============================================================================
 // Time Display Constants

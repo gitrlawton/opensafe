@@ -2,8 +2,8 @@
  * UI State Components - Consistent loading, error, success, and empty states
  */
 
-import { Loader2, AlertCircle, CheckCircle2, Search } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Loader2, AlertCircle, CheckCircle2, Search } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 /**
  * LoadingSpinner - Centered loading state with spinner
@@ -13,9 +13,17 @@ interface LoadingSpinnerProps {
   className?: string;
 }
 
-export function LoadingSpinner({ message, className }: LoadingSpinnerProps): JSX.Element {
+export function LoadingSpinner({
+  message,
+  className,
+}: LoadingSpinnerProps): JSX.Element {
   return (
-    <div className={cn("flex flex-col items-center justify-center py-12 gap-3", className)}>
+    <div
+      className={cn(
+        'flex flex-col items-center justify-center py-12 gap-3',
+        className
+      )}
+    >
       <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       {message && <p className="text-sm text-muted-foreground">{message}</p>}
     </div>
@@ -30,11 +38,14 @@ interface ErrorMessageProps {
   className?: string;
 }
 
-export function ErrorMessage({ message, className }: ErrorMessageProps): JSX.Element {
+export function ErrorMessage({
+  message,
+  className,
+}: ErrorMessageProps): JSX.Element {
   return (
     <div
       className={cn(
-        "flex items-center gap-2 p-4 rounded-lg bg-destructive/10 text-destructive border border-destructive/20",
+        'flex items-center gap-2 p-4 rounded-lg bg-destructive/10 text-destructive border border-destructive/20',
         className
       )}
     >
@@ -52,11 +63,14 @@ interface SuccessMessageProps {
   className?: string;
 }
 
-export function SuccessMessage({ message, className }: SuccessMessageProps): JSX.Element {
+export function SuccessMessage({
+  message,
+  className,
+}: SuccessMessageProps): JSX.Element {
   return (
     <div
       className={cn(
-        "flex items-center gap-2 p-4 rounded-lg bg-success/10 text-success border border-success/20",
+        'flex items-center gap-2 p-4 rounded-lg bg-success/10 text-success border border-success/20',
         className
       )}
     >
@@ -85,7 +99,7 @@ export function EmptyState({
   className,
 }: EmptyStateProps): JSX.Element {
   return (
-    <div className={cn("text-center py-12", className)}>
+    <div className={cn('text-center py-12', className)}>
       {icon && <div className="flex justify-center mb-4">{icon}</div>}
       {title && (
         <h3 className="text-lg font-semibold mb-2 text-foreground">{title}</h3>

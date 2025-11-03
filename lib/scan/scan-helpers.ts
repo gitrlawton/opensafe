@@ -17,19 +17,22 @@
  * @module lib/scan/scan-helpers
  */
 
-import { GitHubClient } from "@/lib/github/client";
-import { GeminiScanWorkflow } from "@/lib/ai/gemini/scan-workflow";
-import { getRepoByOwnerAndName, insertScannedRepo } from "@/lib/database/snowflake";
-import { DEFAULT_GEMINI_MODEL } from "@/lib/constants";
+import { GitHubClient } from '@/lib/github/client';
+import { GeminiScanWorkflow } from '@/lib/ai/gemini/scan-workflow';
+import {
+  getRepoByOwnerAndName,
+  insertScannedRepo,
+} from '@/lib/database/snowflake';
+import { DEFAULT_GEMINI_MODEL } from '@/lib/constants';
 import {
   isRepoTrustedByStar,
   createTrustedRepoScanResult,
   isRepoUnchangedSinceLastScan,
   mapSafetyLevelToScore,
   logError,
-} from "@/lib/utils";
-import type { ScanResult } from "@/types/scan";
-import type { GitHubRepoMetadata } from "@/types/github";
+} from '@/lib/utils';
+import type { ScanResult } from '@/types/scan';
+import type { GitHubRepoMetadata } from '@/types/github';
 
 /**
  * Repository scan context containing metadata and previous scan data
@@ -79,10 +82,12 @@ export function getCachedScanIfUnchanged(
   context: RepoScanContext
 ): ScanResult | null {
   // Check if optimization is enabled (default: true)
-  const isCheckEnabled = process.env.ENABLE_UNCHANGED_REPO_CHECK !== "false";
+  const isCheckEnabled = process.env.ENABLE_UNCHANGED_REPO_CHECK !== 'false';
 
   if (!isCheckEnabled) {
-    console.log("[Scan] Unchanged repo check disabled - proceeding with new scan");
+    console.log(
+      '[Scan] Unchanged repo check disabled - proceeding with new scan'
+    );
     return null;
   }
 
@@ -90,7 +95,10 @@ export function getCachedScanIfUnchanged(
 
   if (
     previousScan &&
-    isRepoUnchangedSinceLastScan(repoMetadata.lastPushedAt, previousScan.SCANNED_AT)
+    isRepoUnchangedSinceLastScan(
+      repoMetadata.lastPushedAt,
+      previousScan.SCANNED_AT
+    )
   ) {
     console.log(
       `[Scan] Repository unchanged since last scan on ${previousScan.SCANNED_AT} - returning cached results`
@@ -124,7 +132,8 @@ export async function executeScanStrategy(
   githubToken?: string
 ): Promise<ScanResult> {
   // Check if star threshold optimization is enabled (default: true)
-  const isStarCheckEnabled = process.env.ENABLE_STAR_THRESHOLD_CHECK !== "false";
+  const isStarCheckEnabled =
+    process.env.ENABLE_STAR_THRESHOLD_CHECK !== 'false';
 
   // Check if repository is trusted based on star count
   if (isStarCheckEnabled && isRepoTrustedByStar(repoMetadata)) {
@@ -135,7 +144,9 @@ export async function executeScanStrategy(
   }
 
   if (!isStarCheckEnabled) {
-    console.log("[Scan] Star threshold check disabled - proceeding with full scan");
+    console.log(
+      '[Scan] Star threshold check disabled - proceeding with full scan'
+    );
   }
 
   // Execute full AI-powered security scan
@@ -170,7 +181,7 @@ export async function saveScanResults(
   scannedBy: string
 ): Promise<void> {
   const safetyScore = mapSafetyLevelToScore(result.safetyLevel);
-  const language = result.repoMetadata?.language || "Unknown";
+  const language = result.repoMetadata?.language || 'Unknown';
 
   console.log(`[Scan] Detected language: ${language}`);
 
@@ -183,9 +194,11 @@ export async function saveScanResults(
       findings: result,
       scannedBy,
     });
-    console.log(`[Scan] Results saved to database for ${repoOwner}/${repoName}`);
+    console.log(
+      `[Scan] Results saved to database for ${repoOwner}/${repoName}`
+    );
   } catch (error) {
-    logError("[Scan]", "Failed to save to database", error);
+    logError('[Scan]', 'Failed to save to database', error);
     // Continue even if database save fails - don't fail the entire request
   }
 }

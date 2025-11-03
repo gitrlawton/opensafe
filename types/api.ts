@@ -3,7 +3,7 @@
  * Shared types for API request/response handling
  */
 
-import type { SafetyScore } from "./scan";
+import type { SafetyScore } from './scan';
 
 /**
  * Scanned repository (frontend format)

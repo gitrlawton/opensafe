@@ -40,7 +40,9 @@ describe('GitHubClient', () => {
     });
 
     it('should parse GitHub URL with .git suffix', () => {
-      const result = client.parseRepoUrl('https://github.com/facebook/react.git');
+      const result = client.parseRepoUrl(
+        'https://github.com/facebook/react.git'
+      );
       expect(result).toEqual({
         owner: 'facebook',
         repo: 'react',
@@ -62,11 +64,15 @@ describe('GitHubClient', () => {
     });
 
     it('should throw error for malformed URL', () => {
-      expect(() => client.parseRepoUrl('not-a-url')).toThrow('Invalid GitHub URL');
+      expect(() => client.parseRepoUrl('not-a-url')).toThrow(
+        'Invalid GitHub URL'
+      );
     });
 
     it('should handle URLs with dashes and underscores', () => {
-      const result = client.parseRepoUrl('https://github.com/my-org_name/my-repo_name');
+      const result = client.parseRepoUrl(
+        'https://github.com/my-org_name/my-repo_name'
+      );
       expect(result).toEqual({
         owner: 'my-org_name',
         repo: 'my-repo_name',

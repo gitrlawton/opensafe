@@ -33,7 +33,6 @@ import {
   GEMINI_SAFETY_LEVEL_MAX_TOKENS,
 } from '@/lib/constants';
 import type {
-  Finding,
   Findings,
   ScanResult,
   RepoContentData,
@@ -41,11 +40,7 @@ import type {
   GeminiWorkflowConfig,
   SafetyLevel,
 } from '@/types/scan';
-import type {
-  PackageJson,
-  GitHubRepoMetadata,
-  GitHubTreeItem,
-} from '@/types/github';
+import type { PackageJson, GitHubRepoMetadata } from '@/types/github';
 
 /**
  * Main workflow orchestrator for repository security scanning
@@ -371,7 +366,7 @@ export class GeminiScanWorkflow {
       repo,
       metadata.defaultBranch,
       filesToScan,
-      (message: string, current: number, total: number) => {
+      (message: string, _current: number, _total: number) => {
         console.log(`   ${message}`);
       }
     );

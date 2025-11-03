@@ -80,7 +80,8 @@ describe('Environment Validation', () => {
       });
 
       it('should reject missing AUTH0_CLIENT_ID', () => {
-        const { AUTH0_CLIENT_ID, ...invalidEnv } = validEnv;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { AUTH0_CLIENT_ID: _AUTH0_CLIENT_ID, ...invalidEnv } = validEnv;
         expect(() => serverEnvSchema.parse(invalidEnv)).toThrow(ZodError);
       });
 
@@ -99,7 +100,8 @@ describe('Environment Validation', () => {
 
     describe('API Keys', () => {
       it('should require GEMINI_API_KEY', () => {
-        const { GEMINI_API_KEY, ...invalidEnv } = validEnv;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { GEMINI_API_KEY: _GEMINI_API_KEY, ...invalidEnv } = validEnv;
         expect(() => serverEnvSchema.parse(invalidEnv)).toThrow(ZodError);
       });
 
@@ -127,7 +129,8 @@ describe('Environment Validation', () => {
         ];
 
         snowflakeFields.forEach((field) => {
-          const { [field]: removed, ...invalidEnv } = validEnv as any;
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { [field]: _removed, ...invalidEnv } = validEnv as any;
           expect(() => serverEnvSchema.parse(invalidEnv)).toThrow(ZodError);
         });
       });
@@ -244,7 +247,8 @@ describe('Environment Validation', () => {
     });
 
     it('should throw error when required variable is missing', () => {
-      const { GEMINI_API_KEY, ...incompleteEnv } = validEnv;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { GEMINI_API_KEY: _GEMINI_API_KEY, ...incompleteEnv } = validEnv;
       process.env = incompleteEnv as any;
 
       expect(() => validateServerEnv()).toThrow();

@@ -184,7 +184,8 @@ describe('Middleware', () => {
 
       try {
         await middleware(request);
-      } catch (e) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (_e) {
         // Expected to throw
       }
 

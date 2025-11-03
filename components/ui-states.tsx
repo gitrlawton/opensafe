@@ -2,7 +2,7 @@
  * UI State Components - Consistent loading, error, success, and empty states
  */
 
-import { Loader2, AlertCircle, CheckCircle2, Search } from 'lucide-react';
+import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 /**

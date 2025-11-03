@@ -342,7 +342,8 @@ export class GeminiService {
     // Strategy 2: Try to parse the entire response as JSON
     try {
       return JSON.parse(response);
-    } catch (firstError) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_firstError) {
       // Response is not pure JSON, need to extract
     }
 

@@ -23,7 +23,6 @@
 
 import type {
   GitHubRepoMetadata,
-  GitHubFile,
   FileToScan,
   ParsedGitHubUrl,
   GitHubTreeItem,
@@ -250,7 +249,8 @@ export class GitHubClient {
       onProgress?.(`✅ package.json loaded`);
 
       return JSON.parse(content);
-    } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_error) {
       onProgress?.(`⚠️  Failed to load package.json`);
       return null;
     }
@@ -312,7 +312,8 @@ export class GitHubClient {
       onProgress?.(`✅ Loaded ${path} (${data.size} bytes)`);
 
       return content;
-    } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_error) {
       onProgress?.(`⚠️  Error fetching ${path}`);
       return null;
     }
@@ -568,10 +569,11 @@ export class GitHubClient {
           continue;
         }
 
-        let content = Buffer.from(data.content, 'base64').toString('utf-8');
+        const content = Buffer.from(data.content, 'base64').toString('utf-8');
 
         scannedFiles.set(filePath, content);
-      } catch (error) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (_error) {
         scannedFiles.set(filePath, null);
       }
     }

@@ -116,7 +116,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     let body: unknown;
     try {
       body = await request.json();
-    } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_error) {
       return NextResponse.json(
         { error: 'Invalid JSON in request body' },
         { status: 400 }
@@ -146,7 +147,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       const parsed = parseGitHubUrl(repoUrl);
       repoOwner = parsed.owner;
       cleanRepoName = parsed.repo;
-    } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_error) {
       return NextResponse.json(
         createApiError('Invalid GitHub repository URL'),
         { status: 400 }

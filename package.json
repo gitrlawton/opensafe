@@ -16,7 +16,8 @@
     "test:coverage": "jest --coverage",
     "test-gemini": "tsx scripts/test-gemini.ts",
     "test-github": "tsx scripts/test-github.ts",
-    "test-scan-gemini": "tsx scripts/test-scan-gemini.ts"
+    "test-scan-gemini": "tsx scripts/test-scan-gemini.ts",
+    "prepare": "husky"
   },
   "dependencies": {
     "@auth0/nextjs-auth0": "^4.11.0",
@@ -87,6 +88,7 @@
     "eslint": "^9.38.0",
     "eslint-config-next": "^16.0.0",
     "eslint-config-prettier": "^10.1.8",
+    "husky": "^9.1.7",
     "jest": "^30.2.0",
     "jest-environment-jsdom": "^30.2.0",
     "postcss": "^8.5",

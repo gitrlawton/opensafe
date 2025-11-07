@@ -19,6 +19,15 @@
     "test-scan-gemini": "tsx scripts/test-scan-gemini.ts",
     "prepare": "husky"
   },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,css,md}": [
+      "prettier --write"
+    ]
+  },
   "dependencies": {
     "@auth0/nextjs-auth0": "^4.11.0",
     "@google/generative-ai": "^0.21.0",
@@ -91,6 +100,7 @@
     "husky": "^9.1.7",
     "jest": "^30.2.0",
     "jest-environment-jsdom": "^30.2.0",
+    "lint-staged": "^16.2.6",
     "postcss": "^8.5",
     "prettier": "^3.6.2",
     "tailwindcss": "^4.1.9",

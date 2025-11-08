@@ -6,7 +6,6 @@ This document provides guidelines and instructions for contributing to OpenSafe.
 
 ## Table of Contents
 
-- [Code of Conduct](#code-of-conduct)
 - [Security Guidelines](#security-guidelines)
 - [Getting Started](#getting-started)
 - [Development Environment Setup](#development-environment-setup)
@@ -21,10 +20,6 @@ This document provides guidelines and instructions for contributing to OpenSafe.
 - [Suggesting Features](#suggesting-features)
 - [Review Process](#review-process)
 - [Getting Help](#getting-help)
-
-## Code of Conduct
-
-This project adheres to a Code of Conduct that all contributors are expected to follow. Please read [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) before contributing.
 
 ## Security Guidelines
 
@@ -66,7 +61,7 @@ To run OpenSafe locally, you'll need accounts with the following services:
 
 ```bash
 # Fork the repository on GitHub, then clone your fork
-git clone https://github.com/YOUR_USERNAME/opensafe.git
+git clone https://github.com/gitrlawton/opensafe.git
 cd opensafe
 ```
 
@@ -331,7 +326,7 @@ Documentation is crucial for project maintainability. When contributing:
 
 ### API Documentation
 
-- Document new API endpoints in `docs/API.md` (when it exists)
+- Document new API endpoints in `docs/API.md`
 - Include request/response examples
 
 ### Architecture Documentation

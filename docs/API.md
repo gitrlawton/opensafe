@@ -535,7 +535,7 @@ The OpenSafe API does not currently use versioning in the URL path. Breaking cha
 
 For API issues, questions, or feature requests:
 
-- **GitHub Issues**: [Report a bug or request a feature](https://github.com/yourusername/opensafe/issues)
+- **GitHub Issues**: [Report a bug or request a feature](https://github.com/gitrlawton/opensafe/issues)
 - **Documentation**: See [CONTRIBUTING.md](../CONTRIBUTING.md) for development setup
 - **Security**: Report vulnerabilities via [SECURITY.md](../SECURITY.md)
 

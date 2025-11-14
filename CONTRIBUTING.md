@@ -469,14 +469,14 @@ chore/update-dependencies
 
 2. **Create PR on GitHub** with a clear title and description
 
-3. **Fill out the PR template** (when available) with:
-   - Description of changes
-   - Related issue number (if applicable)
-   - Type of change (feature, fix, etc.)
-   - Testing performed
-   - Screenshots (for UI changes)
+3. **Fill out the PR template** which will be automatically loaded:
+   - The template includes all required sections
+   - Complete all relevant checkboxes
+   - Provide clear descriptions and testing details
+   - Link related issues using keywords (e.g., "Closes #123", "Fixes #456")
+   - See `.github/PULL_REQUEST_TEMPLATE.md` for the full template
 
-4. **Link related issues** using keywords (e.g., "Fixes #123")
+4. **Ensure CI checks pass** - All automated checks must pass before merge
 
 ### PR Guidelines
 

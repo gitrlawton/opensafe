@@ -3,6 +3,7 @@
 > Verify before contributing to open source projects
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Discussions](https://img.shields.io/github/discussions/gitrlawton/opensafe)](https://github.com/gitrlawton/opensafe/discussions)
 
 ## About
 
@@ -67,8 +68,10 @@ _Comprehensive threat report showing detected security issues and vulnerabilitie
 
 We're excited to welcome contributors soon! In the meantime:
 
-- Star and watch this repository to show your interest and be notified when we're ready to accept contributions
-- Open an issue if you have feature ideas or bug reports
+- **[Join the Discussion](https://github.com/gitrlawton/opensafe/discussions)** - Ask questions, share ideas, and connect with the community
+- **Star and watch** this repository to be notified when we're ready to accept contributions
+- **Open an issue** for bug reports or feature requests
+- See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed contribution guidelines
 
 ## License
 

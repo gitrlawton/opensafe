@@ -608,9 +608,9 @@ Need help contributing? Here are some resources:
 
 ### Communication
 
+- **[GitHub Discussions](https://github.com/gitrlawton/opensafe/discussions)** - For questions, help, ideas, and general discussion
 - **GitHub Issues** - For bugs and feature requests
 - **Pull Request Comments** - For code-specific discussions
-- **GitHub Discussions** (coming soon) - For questions and general discussion
 
 ### Common Issues
 

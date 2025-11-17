@@ -62,7 +62,9 @@ jest.mock('@/lib/validations/api', () => {
         };
       }),
     },
-    createValidationError: jest.fn((_error) => ({ error: 'Validation failed' })),
+    createValidationError: jest.fn((_error) => ({
+      error: 'Validation failed',
+    })),
     sanitizeString: jest.fn((str) => {
       // Simple sanitization mock - removes < and > characters
       return String(str || '').replace(/[<>]/g, '');

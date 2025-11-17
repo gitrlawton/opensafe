@@ -4,6 +4,8 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Discussions](https://img.shields.io/github/discussions/gitrlawton/opensafe)](https://github.com/gitrlawton/opensafe/discussions)
+[![CI](https://github.com/gitrlawton/opensafe/actions/workflows/ci.yml/badge.svg)](https://github.com/gitrlawton/opensafe/actions/workflows/ci.yml)
+[![Type Check](https://github.com/gitrlawton/opensafe/actions/workflows/type-check.yml/badge.svg)](https://github.com/gitrlawton/opensafe/actions/workflows/type-check.yml)
 
 ## About
 

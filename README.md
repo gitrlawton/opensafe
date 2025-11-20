@@ -64,16 +64,109 @@ _Detailed analysis showing a safe repository with no threats detected_
 ![Unsafe Repository Results - Part 2](public/screenshots/3-Scan_Results_UNSAFE_Part2.PNG)
 _Comprehensive threat report showing detected security issues and vulnerabilities_
 
+## Getting Started for Contributors
+
+Want to contribute to OpenSafe? Here's how to get your development environment set up.
+
+### Prerequisites
+
+Before you begin, ensure you have:
+
+- **Node.js** 18.17.0 or higher (v20+ recommended)
+- **npm** 9.0.0 or higher
+- **Git** (latest version)
+- **API Keys and Accounts**:
+  - GitHub Personal Access Token
+  - Google Gemini API key
+  - Auth0 account (free tier)
+  - Snowflake account (free trial)
+
+For detailed prerequisites and account setup instructions, see the [Development Guide](docs/DEVELOPMENT.md#prerequisites).
+
+### Quick Installation
+
+1. **Clone the repository**:
+
+   ```bash
+   git clone https://github.com/gitrlawton/opensafe.git
+   cd opensafe
+   ```
+
+2. **Install dependencies**:
+
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables**:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   Then configure your API keys in `.env` (see [Environment Configuration](docs/DEVELOPMENT.md#environment-configuration) for detailed setup).
+
+4. **Run the development server**:
+   ```bash
+   npm run dev
+   ```
+
+Your local OpenSafe instance will be available at `http://localhost:3000`.
+
+For detailed installation instructions including database setup and service configuration, see the [Development Guide](docs/DEVELOPMENT.md#initial-setup).
+
+### Basic Usage
+
+```bash
+# Start development server
+npm run dev
+
+# Run tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Check code quality
+npm run lint
+npm run type-check
+npm run format:check
+
+# Build for production
+npm run build
+```
+
+See the [Development Guide](docs/DEVELOPMENT.md#useful-scripts) for all available scripts and development workflow.
+
+### Architecture Overview
+
+OpenSafe follows a **service layer pattern** where business logic lives in the `lib/` directory, making it reusable, testable, and framework-agnostic. API routes in `app/api/` are thin HTTP handlers that delegate to the service layer.
+
+**Key directories**:
+
+- `app/` - Next.js pages and API routes
+- `lib/` - Business logic and service layer (GitHub client, AI scanning, database)
+- `types/` - TypeScript type definitions
+- `docs/` - Comprehensive documentation
+
+For detailed architecture information, see the [Architecture Guide](docs/ARCHITECTURE.md).
+
+### Additional Resources
+
+- **[API Documentation](docs/API.md)** - API endpoints and request/response schemas
+- **[Development Guide](docs/DEVELOPMENT.md)** - Complete setup, debugging, and troubleshooting
+- **[Architecture Guide](docs/ARCHITECTURE.md)** - System design and technical decisions
+- **[Contributing Guidelines](CONTRIBUTING.md)** - Code standards and PR process
+- **[Security Policy](SECURITY.md)** - Reporting vulnerabilities
+
 ## Contributing
 
-⚠️ **We're currently preparing our contribution guidelines and development environment setup.**
-
-We're excited to welcome contributors soon! In the meantime:
+We're excited to welcome contributors! Here's how you can help:
 
 - **[Join the Discussion](https://github.com/gitrlawton/opensafe/discussions)** - Ask questions, share ideas, and connect with the community
-- **Star and watch** this repository to be notified when we're ready to accept contributions
+- **Star and watch** this repository to stay updated
 - **Open an issue** for bug reports or feature requests
-- See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed contribution guidelines
+- **Submit a pull request** - See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines
 
 ## License
 

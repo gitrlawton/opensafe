@@ -1039,6 +1039,6 @@ All configuration is managed via environment variables. See `.env.example` for f
 
 ---
 
-**Last Updated**: 2025-01-19
+**Last Updated**: 2025-11-10
 **OpenSafe Version**: 1.0.0
 **Maintained by**: OpenSafe Team

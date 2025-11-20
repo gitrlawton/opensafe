@@ -239,7 +239,7 @@ export async function GET(): Promise<NextResponse> {
       status: 'online',
       message: 'OpenSafe Repository Scanner API (Gemini-powered)',
       provider: 'Google Gemini API',
-      model: 'gemini-2.5-flash-lite',
+      model: 'gemini-2.5-flash',
       rateLimits: {
         free: '10 requests/minute, 250 requests/day',
         tokenLimit: '250,000 tokens/minute',

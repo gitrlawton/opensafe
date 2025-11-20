@@ -460,7 +460,7 @@ curl https://www.opensafe.app/api/scan-gemini
   "status": "online",
   "message": "OpenSafe Repository Scanner API (Gemini-powered)",
   "provider": "Google Gemini API",
-  "model": "gemini-2.5-flash-lite",
+  "model": "gemini-2.5-flash",
   "rateLimits": {
     "free": "10 requests/minute, 250 requests/day",
     "tokenLimit": "250,000 tokens/minute"
@@ -541,5 +541,5 @@ For API issues, questions, or feature requests:
 
 ---
 
-**Last Updated**: 2025-11-07
+**Last Updated**: 2025-11-20
 **API Version**: 1.0

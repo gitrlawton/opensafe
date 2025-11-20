@@ -638,6 +638,6 @@ All contributors will be recognized in:
 
 - Project README
 - Release notes
-- AUTHORS.md file (coming soon)
+- GitHub Contributors page
 
 Thank you for contributing to OpenSafe and helping make open source safer!

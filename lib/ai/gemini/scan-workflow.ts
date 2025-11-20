@@ -55,7 +55,7 @@ import type { PackageJson, GitHubRepoMetadata } from '@/types/github';
  * const workflow = new GeminiScanWorkflow({
  *   geminiApiKey: process.env.GEMINI_API_KEY,
  *   githubToken: process.env.GITHUB_TOKEN,
- *   geminiModel: 'gemini-2.5-flash-lite'
+ *   geminiModel: 'gemini-2.5-flash'
  * });
  *
  * const result = await workflow.scanRepository('https://github.com/facebook/react');
@@ -74,7 +74,7 @@ export class GeminiScanWorkflow {
    * @param config - Configuration for the workflow
    * @param config.geminiApiKey - Google Gemini API key
    * @param config.githubToken - GitHub personal access token (optional, for higher rate limits)
-   * @param config.geminiModel - Gemini model to use (default: 'gemini-2.5-flash-lite')
+   * @param config.geminiModel - Gemini model to use (default: 'gemini-2.5-flash')
    */
   constructor(config: GeminiWorkflowConfig) {
     this.config = config;

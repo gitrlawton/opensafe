@@ -49,7 +49,7 @@ export { SchemaType };
  * ```typescript
  * const service = new GeminiService({
  *   apiKey: process.env.GEMINI_API_KEY,
- *   model: 'gemini-2.5-flash-lite'
+ *   model: 'gemini-2.5-flash'
  * });
  *
  * // Simple text generation
@@ -73,7 +73,7 @@ export class GeminiService {
    *
    * @param config - Configuration for the Gemini service
    * @param config.apiKey - Google Gemini API key
-   * @param config.model - Optional model name (default: 'gemini-2.5-flash-lite')
+   * @param config.model - Optional model name (default: 'gemini-2.5-flash')
    */
   constructor(config: GeminiServiceConfig) {
     this.genAI = new GoogleGenerativeAI(config.apiKey);
